@@ -1,0 +1,8 @@
+#Victor Nogueira - 1511043
+
+main() : int {
+    c : char;
+
+    c = "fdafda\fdafda";
+    return 0;
+}
