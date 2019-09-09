@@ -1,14 +1,19 @@
 %token TK_INT TK_CHAR TK_FLOAT TK_BOOL
-%token TK_IF TK_ELSE TK_WHILE TK_RETURN TK_NEW TK_AS
-%token TK_AND TK_OR TK_GEQUALS TK_LEQUALS TK_EQUALS TK_NEQUALS
-%token TK_STRING
+%token TK_IF TK_ELSE TK_WHILE TK_RET TK_NEW TK_AS
+%token TK_AND TK_OR TK_PRINT TK_GEQUALS TK_LEQUALS TK_EQUALS TK_NEQUALS
+%token TK_RAWINT TK_RAWFLOAT TK_STRING TK_FALSE TK_TRUE TK_LITERAL
 %token <wrap> TK_ID
 
-/*%error-verbose */
+%define parse.trace true
+%define parse.error verbose
+%define api.value.type {double}
 
 %{
 #include <stdio.h>
-#include <stdlib.h>
+#include "lex.yy.h"
+#include "monga.tab.h"
+
+void yyerror(const char *);
 %}
 
 %%
@@ -58,8 +63,8 @@ cmd : TK_IF '(' exp ')' stat
     | TK_IF '(' exp ')' stat TK_ELSE stat
     | TK_WHILE '(' exp ')' stat
     | chamada_func ';'
-    | TK_RETURN ';'
-    | TK_RETURN exp_or ';'
+    | TK_RET ';'
+    | TK_RET exp_or ';'
     | '@' exp ';'
     | var '=' exp
     | stat
@@ -119,3 +124,7 @@ lista_exp1 : %empty
 
 
 %%
+
+void yyerror (char const *s) {
+    fprintf (stderr, "%s\n", s);
+}
