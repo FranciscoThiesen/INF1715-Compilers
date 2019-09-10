@@ -100,7 +100,7 @@ as                              { return TK_AS; }
                                    return TK_LITERAL;
                                 }
 
-\#[^\n]*\n                      {}
+\#[^\n]*\n                      { line++; }
 
 \n                              { line++; }
 

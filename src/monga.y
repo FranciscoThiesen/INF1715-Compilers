@@ -11,8 +11,8 @@
 #include <stdio.h>
 #include "lex.yy.h"
 #include "monga.tab.h"
-extern unsigned int line;
 
+extern unsigned int line;
 void yyerror(const char *);
 %}
  
@@ -59,12 +59,12 @@ cmd : TK_IF '(' exp ')' stat
     | TK_WHILE '(' exp ')' stat
     | TK_PRINT exp ';'
     | stat
-    | var '=' exp ';'
-    | chamada_func ';'
+    | exp ';'
  
 chamada_func : TK_ID '(' exps ')'
  
 exp : exp_or
+    | var '=' exp
  
 exp_or : exp_or TK_OR exp_and
        | exp_and
@@ -104,7 +104,7 @@ primitiva : TK_RAWINT
           | TK_STRING
           | TK_TRUE
           | TK_FALSE
-	  | TK_LITERAL
+          | TK_LITERAL
           | var
           | '(' exp ')'
 
