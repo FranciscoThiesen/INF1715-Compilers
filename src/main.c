@@ -5,10 +5,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <libgen.h>
-#include "tk.h"
+#include "monga.tab.h"
 #include "lex.yy.h"
-
-SemValue s;
 
 char *strtoken[] = {
     "int",
@@ -41,12 +39,7 @@ static void usage(const char *prog) {
             prog);
 }
 
-char *gettoken(TK_EN token) {
-    return strtoken[token - CHAR_MAX - 1];
-}
-
 int main(int argc, char *argv[]) {
-    TK_EN token;
     int opt;
     FILE *fin;
     FILE *fout;
@@ -90,88 +83,10 @@ int main(int argc, char *argv[]) {
     }
 
     yyrestart(fin);
-    while((token = yylex())) {
-        switch (token) {
-            case TK_INT:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_FLOAT:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_CHAR:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_BOOL:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_TRUE:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_FALSE:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_IF:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_ELSE:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_WHILE:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_RET:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_NEW:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_AS:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_ID:
-                printf("%s\n", s.s);
-                free(s.s);
-                break;
-            case TK_PRINT:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_EQUALS:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_GEQUALS:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_LEQUALS:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_NEQUALS:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_AND:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_OR:
-                printf("%s\n", gettoken(token));
-                break;
-            case TK_RAWINT:
-                printf("%d\n", s.i);
-                break;
-            case TK_RAWFLOAT:
-                printf("%f\n", s.d);
-                break;
-            case TK_STRING:
-                printf("%s\n", s.s);
-                free(s.s);
-                break;
-            case TK_LITERAL:
-                printf("%c\n", s.i);
-                break;
-            default:
-                if (token != ' ')
-                    printf("%c\n", token);
-        }
-    }
 
+    if (yyparse()) {
+        printf("deu ruim\n");
+   }
     fclose(fin);
     fclose(fout);
 }

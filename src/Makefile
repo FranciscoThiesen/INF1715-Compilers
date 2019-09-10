@@ -1,11 +1,13 @@
 #Victor Nogueira - 1511043
 
 LEXFILE=monga.l
-SRCS=main.c lex.yy.c
+BISONFILE=monga.y
+SRCS=main.c lex.yy.c monga.tab.c
 CC=gcc
 LEXHDR=lex.yy.h
 MONGAC=mongac
 LEX=lex
+BISON=bison
 RM=rm -f
 DARWIN=Darwin
 UNAME=$(shell uname)
@@ -22,5 +24,8 @@ $(MONGAC):$(LEX) $(SRCS)
 $(LEX): $(LEXFILE)
 	$@ --header-file=$(LEXHDR) $<
 
+$(BISON): $(BISONFILE)
+	$@ -d $<
+
 clean:
-	$(RM) $(LEXHDR) lex.yy.c $(MONGAC)
+	$(RM) $(LEXHDR) lex.yy.c monga.tab.c $(MONGAC)
