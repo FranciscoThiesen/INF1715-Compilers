@@ -1,7 +1,7 @@
 %{
 //Victor Nogueira - 1511043
 
-#include<stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
@@ -103,6 +103,8 @@ as                              { return TK_AS; }
 \#[^\n]*\n                      {}
 
 \n                              { line++; }
+
+[ \t]+				{}
 
 .                               { return yytext[0]; }
 %%

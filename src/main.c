@@ -85,8 +85,11 @@ int main(int argc, char *argv[]) {
     yyrestart(fin);
 
     if (yyparse()) {
-        printf("deu ruim\n");
-   }
+	    printf("deu ruim\n");
+	    exit(-1);
+    }
+
+    printf("deu certo\n");
     fclose(fin);
     fclose(fout);
 }
