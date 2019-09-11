@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include "tk.h"
+#include "monga.tab.h"
 
 static char *stringcpy();
 static char literalcpy();
@@ -67,36 +67,36 @@ as                              { return TK_AS; }
 "||"                            { return TK_OR; }
 
 {id}                            {
-                                    s.s = idcpy();
+                                    //yylval = idcpy();
                                     return TK_ID;
                                 }
 
 {decdig}+                       {
-                                    s.i = intcpy();
+                                    //yylval = intcpy();
                                     return TK_RAWINT;
                                 }
 
 {decfloat}                      {
-                                    s.d = doublecpy();
+                                    //yylval = doublecpy();
                                     return TK_RAWFLOAT;
                                 }
 
 0[xX]{hexdig}+                  {
-                                    s.i = inthexcpy();
+                                    //yylval = inthexcpy();
                                     return TK_RAWINT;
                                 }
 
 {hexfloat}                      {
-                                    s.d = doublecpy();
+                                    //yylval = doublecpy();
                                     return TK_RAWFLOAT;
                                 }
 
 {string}                        {
-                                    s.s = stringcpy();
+                                    //yylval = stringcpy();
                                     return TK_STRING;
                                 }
 {literal}                       {
-                                   s.i = literalcpy();
+                                   //yylval = literalcpy();
                                    return TK_LITERAL;
                                 }
 

@@ -1,13 +1,16 @@
 %token TK_INT TK_CHAR TK_FLOAT TK_BOOL
-%token TK_IF TK_ELSE TK_WHILE TK_RETURN TK_NEW TK_AS
-%token TK_AND TK_OR TK_GEQUALS TK_LEQUALS TK_EQUALS TK_NEQUALS
+%token TK_IF TK_ELSE TK_WHILE TK_RET TK_NEW TK_AS
+%token TK_AND TK_OR TK_PRINT TK_GEQUALS TK_LEQUALS TK_EQUALS TK_NEQUALS
+%token TK_RAWINT TK_RAWFLOAT TK_STRING TK_FALSE TK_TRUE TK_LITERAL
 %token <wrap> TK_ID
 
-/*%error-verbose */
+%error-verbose
 
 %{
 #include <stdio.h>
-#include <stdlib.h>
+#include "lex.yy.h"
+
+void yyerror(const char *);
 %}
 
 %%
@@ -27,3 +30,6 @@ bloco: '{' defvariaveis /*commandos*/ '}' {}
 /*comandos: */
 defvariaveis: defvariavel defvariaveis | defvariavel {}
 %%
+void yyerror (char const *s) {
+    fprintf (stderr, "%s\n", s);
+}

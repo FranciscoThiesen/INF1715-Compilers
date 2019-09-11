@@ -5,6 +5,7 @@ BISONFILE=monga.y
 SRCS=main.c lex.yy.c monga.tab.c
 CC=gcc
 LEXHDR=lex.yy.h
+MONGAHDR=monga.tab.h
 MONGAC=mongac
 LEX=lex
 BISON=bison
@@ -18,7 +19,7 @@ else
 LDFLAGS=-lfl
 endif
 
-$(MONGAC):$(LEX) $(SRCS)
+$(MONGAC): $(LEX) $(BISON) $(SRCS)
 	$(CC) -o $@ $(LDFLAGS) $(SRCS)
 
 $(LEX): $(LEXFILE)
@@ -28,4 +29,4 @@ $(BISON): $(BISONFILE)
 	$@ -d $<
 
 clean:
-	$(RM) $(LEXHDR) lex.yy.c monga.tab.c $(MONGAC)
+	$(RM) lex.yy.c $(LEXHDR) monga.tab.c $(MONGAHDR) $(MONGAC)
