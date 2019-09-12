@@ -1,0 +1,26 @@
+#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+
+fib( x : int ) : int {
+    if( x <= 2 ) return 1;
+    return fib( x - 1 ) * fib( x - 2 );
+}
+
+wow_such_an_important_function() : bool {
+    return false;
+}
+
+main() : int {
+    a : int;
+    a = 13;
+    @ fib( a );
+    a = 0x3f.p8;
+    @ fib( a );
+    a = "abacabadabacaba";
+    @ fib( a );
+    @ fib ( fib( a ) );
+    a = 'f';
+    @ fib( a );
+
+    return !wow_such_an_important_function(); 
+
+}
