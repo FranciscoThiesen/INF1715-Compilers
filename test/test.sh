@@ -1,5 +1,5 @@
 #!/bin/bash
-#Victor Nogueira - 1511043
+#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
 FILES=*.monga
 PASSED=true

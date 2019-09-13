@@ -1,4 +1,6 @@
 # Compiladores
+## Autores: Francisco Thiesen & Victor Nogueira
+
 ## Para compilar
 cd src && make
 
