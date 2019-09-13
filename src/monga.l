@@ -6,6 +6,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include "monga.tab.h"
+#include "aux.h"
 
 static char *stringcpy();
 static char literalcpy();

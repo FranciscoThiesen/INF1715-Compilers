@@ -26,7 +26,6 @@ int main(int argc, char *argv[]) {
 
 	memset(outputfile, 0, 256);
 	memset(inputfile, 0, 256);
-
 	while ((opt = getopt(argc, argv, optstr)) != -1) {
 		switch (opt) {
 			case 'o':

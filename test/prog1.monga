@@ -14,16 +14,17 @@ main() : int {
     c : char[];
     c2 : char;
     i : int;
+    b : bool;
 
     f = 0x4.5p-1;
     # 0100.0101 -> 0010.00101
-    a = 4 as float
+    a = 4 as float;
     f = 0x4.5P-1;
     c = "fdsa\n\\\"989";
     c2 = '\"';
+    b = false || true && false;
 
-
-    if (dumb((2.0 + 3.2e10) * 15 / (((2))))) {
+    if (dumb((2.0 + 3.2e10) * 15 / (((2)))) || b) {
         @f;
         @c;
     } else {

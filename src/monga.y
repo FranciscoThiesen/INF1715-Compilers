@@ -11,8 +11,8 @@
 #include <stdio.h>
 #include "lex.yy.h"
 #include "monga.tab.h"
+#include "aux.h"
 
-extern unsigned int line;
 void yyerror(const char *);
 %}
  
@@ -29,7 +29,6 @@ def_func : TK_ID '(' params ')' ':' tipo stat
  
 def_funcs : %empty
           | def_func def_funcs
- 
  
 tipo_nativo : TK_INT
             | TK_CHAR
