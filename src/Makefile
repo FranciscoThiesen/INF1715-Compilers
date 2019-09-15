@@ -2,10 +2,11 @@
 
 LEXFILE=monga.l
 BISONFILE=monga.y
-SRCS=main.c lex.yy.c monga.tab.c
 CC=gcc
-LEXHDR=lex.yy.h
-MONGAHDR=monga.tab.h
+LEXSRC=lex.yy.c
+BISONSRC=monga.tab.c
+SRCS=main.c $(LEXSRC) $(BISONSRC)
+MONGAC=mongac
 RM=rm -f
 DARWIN=Darwin
 UNAME=$(shell uname)
@@ -16,16 +17,14 @@ else
 LDFLAGS=-lfl -Wextra
 endif
 
-all: lex bison mongac
-
-mongac: $(SRCS)
+$(MONGAC): $(SRCS)
 	$(CC) -o $@ $(LDFLAGS) $(SRCS)
 
-lex: $(LEXFILE)
-	lex --header-file=$(LEXHDR) $<
+$(LEXSRC): $(LEXFILE)
+	lex --header-file=lex.yy.h $<
 
-bison: $(BISONFILE)
+$(BISONSRC): $(BISONFILE)
 	bison -d $<
 
 clean:
-	$(RM) lex.yy.c $(LEXHDR) monga.tab.c $(MONGAHDR) $(MONGAC)
+	$(RM) $(LEXSRC) lex.yy.h $(BISONSRC) monga.tab.h $(MONGAC)
