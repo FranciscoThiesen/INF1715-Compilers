@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <fcntl.h>
 #include "monga.tab.h"
 #include "aux.h"
@@ -37,9 +38,15 @@ char                            { return TK_CHAR; }
 
 bool                            { return TK_BOOL; }
 
-true                            { return TK_TRUE; }
+true                            {
+                                    yylval.c = true;
+                                    return TK_TRUE;
+                                }
 
-false                           { return TK_FALSE; }
+false                           {
+                                    yylval.c = false;
+                                    return TK_FALSE;
+                                }
 
 if                              { return TK_IF; }
 
@@ -68,36 +75,36 @@ as                              { return TK_AS; }
 "||"                            { return TK_OR; }
 
 {id}                            {
-                                    //yylval = idcpy();
+                                    yylval.str = idcpy();
                                     return TK_ID;
                                 }
 
 {decdig}+                       {
-                                    //yylval = intcpy();
+                                    yylval.i = intcpy();
                                     return TK_RAWINT;
                                 }
 
 {decfloat}                      {
-                                    //yylval = doublecpy();
+                                    yylval.d = doublecpy();
                                     return TK_RAWFLOAT;
                                 }
 
 0[xX]{hexdig}+                  {
-                                    //yylval = inthexcpy();
+                                    yylval.i = inthexcpy();
                                     return TK_RAWINT;
                                 }
 
 {hexfloat}                      {
-                                    //yylval = doublecpy();
+                                    yylval.d = doublecpy();
                                     return TK_RAWFLOAT;
                                 }
 
 {string}                        {
-                                    //yylval = stringcpy();
+                                    yylval.str = stringcpy();
                                     return TK_STRING;
                                 }
 {literal}                       {
-                                   //yylval = literalcpy();
+                                   yylval.c = literalcpy();
                                    return TK_LITERAL;
                                 }
 
@@ -105,12 +112,12 @@ as                              { return TK_AS; }
 
 \n                              { line++; }
 
-[ \t]+				{}
+[ \t]+                          {}
 
 .                               { return yytext[0]; }
 %%
 
-static void *tryalloc(int size) {
+static void *tryalloc(size_t size) {
     void *newptr = malloc(sizeof(char) * size);
 
     if (!newptr) {

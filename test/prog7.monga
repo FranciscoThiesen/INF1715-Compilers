@@ -2,12 +2,5 @@
 
 main() : int {
     i : int;
-    i = 1;
-
-    if (i <= 20 && 1 == 1) {
-        @i;
-    }
-
-    while (i < 20 )
-	@i;
+    j : float;
 }

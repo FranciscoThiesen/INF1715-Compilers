@@ -1,7 +1,7 @@
 #Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
-main() : int[] {
-    vet : int[];
+main() : [int] {
+    vet : [int];
     i : int;
 
     while (i < 20) {

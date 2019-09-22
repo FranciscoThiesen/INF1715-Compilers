@@ -11,7 +11,7 @@ dumb(a : float): bool {
 main() : int {
     f : float;
     a : float;
-    c : char[];
+    c : [char];
     c2 : char;
     i : int;
     b : bool;

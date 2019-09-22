@@ -11,7 +11,7 @@ wow( useless : int ) : int
 
 main() : int 
 {
-    memo : int[];
+    memo : [int];
     i : int;
     i = 0;
     while ( i < 0xff ) 
