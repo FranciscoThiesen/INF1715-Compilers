@@ -46,7 +46,7 @@ void yyerror(const char *);
 
 %%
  
-programa : def_vars def_funcs               { GLOBAL_TREE =  prognode($1, $2); }
+programa : def_vars def_funcs               { GLOBAL_TREE = prognode($1, $2); }
 
 
 def_var : TK_ID ':' tipo ';'                { $$ = vardef($1, $3); }
@@ -96,7 +96,7 @@ cmd : TK_IF '(' exp ')' stat                { $$ = newcmd(IF, $3, $5, NULL); }
  
 chamada_func : TK_ID '(' exps ')'           { $$ = callexp($1, $3); }
  
-exp_var : var '=' exp                       { $$ = binaryexp(VAR, $1, $3); };
+exp_var : var '=' exp                       { $$ = binaryexp(EXPATT, $1, $3); };
 
 exp : exp_or                                { $$ = $1; }
  

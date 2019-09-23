@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct prog *GLOBAL_TREE;
-
 static void *tryalloc(size_t size) {
     void *newptr = malloc(sizeof(char) * size);
 
@@ -168,7 +166,7 @@ union cmd *statcmd(struct stat *stat) {
 union cmd *attcmd(union exps *att) {
     union cmd *cmd = tryalloc(sizeof(union cmd));
 
-    cmd->tag = ATT;
+    cmd->tag = ATTCMD;
     cmd->att.att = att;
     cmd->att.next;
 }
@@ -196,7 +194,7 @@ union cmd *newseqcmd(union cmd *c1, union cmd *c2) {
         case CALLCMD:
             c1->call.next = c2;
             break;
-        case ATT:
+        case ATTCMD:
             c1->att.next = c2;
             break;
         default:
@@ -244,7 +242,7 @@ union exps *callexp(char *name, union exps *e1) {
 
     exp->tag = CALLEXP;
     exp->call.name = name;
-    exp->call.exp = e1;
+    exp->call.listexp = e1;
     exp->call.next = NULL;
 
     return exp;
