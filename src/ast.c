@@ -15,6 +15,47 @@ static void *tryalloc(size_t size) {
     return newptr;
 }
 
+union def *def(enum def_types type, struct var *var, struct func *func) {
+    union def *newdef = tryalloc(sizeof(union def));
+
+    switch (type){
+        case DEFVAR:
+            newdef->tag = DEFVAR;
+            newdef->vars.vars = var;
+            newdef->vars.next = NULL;
+            break;
+        case DEFFUNC:
+            newdef->tag = DEFFUNC;
+            newdef->funcs.funcs = func;
+            newdef->funcs.next = NULL;
+            break;
+        default:
+            fprintf(stderr, "unknown type\n");    
+            exit(-1);
+    }
+
+    return newdef;
+}
+
+union def *defseq(union def *delem, union def *dlist) {
+    if (!delem)
+        return dlist;
+
+    switch (delem->tag){
+        case DEFVAR:
+            delem->vars.next= dlist;
+            break;
+        case DEFFUNC:
+            delem->funcs.next = dlist;
+            break;
+        default:
+            fprintf(stderr, "unknown type\n");    
+            exit(-1);
+    }
+
+    return delem;
+}
+
 struct var *vardef(char *name, union type *type) {
     struct var *var = tryalloc(sizeof(struct var));
 
@@ -398,13 +439,4 @@ union exps *newbool(bool b) {
     exp->expbool.next = NULL;
 
     return exp;
-}
-
-struct prog *prognode(struct var *vars, struct func *funcs) {
-    struct prog *node = tryalloc(sizeof(struct prog));
-
-    node->vars = vars;
-    node->funcs = funcs;
-
-    return node;
 }

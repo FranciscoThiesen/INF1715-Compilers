@@ -11,6 +11,11 @@ enum native_types {
     BOOL
 };
 
+enum def_types {
+    DEFVAR,
+    DEFFUNC
+};
+
 enum exp_type {
     VAR,
     CALLEXP,
@@ -155,9 +160,18 @@ struct func {
     struct func *next;
 };
 
-struct prog {
-    struct func *funcs;
-    struct var *vars;
+union def {
+    enum def_types tag;
+    struct {
+        enum def_types tag;
+        struct var *vars; 
+        union def *next;
+    } vars;
+    struct {
+        enum def_types tag;
+        struct func *funcs;
+        union def *next;
+    } funcs;
 };
 
 union cmd {
@@ -217,8 +231,10 @@ struct stat {
     union cmd *cmds;
 };
 
-extern struct prog *GLOBAL_TREE;
+extern union def *GLOBAL_TREE;
 
+extern union def *def(enum def_types type, struct var *var, struct func *func);
+extern union def *defseq(union def *delem, union def *dlist);
 extern struct var *vardef(char *name, union type *type);
 extern struct var *varseqdef(struct var *v1, struct var *v2);
 extern struct func *func(char *name, struct param *params, union type * type,

@@ -32,22 +32,28 @@ void yyerror(const char *);
     double d;
     char *str;
     char c;
+    union def *def;
     //int line;
 }
 %type <cmd> cmds cmd
 %type <type> tipo_nativo tipo tipo_opt
 %type <var> def_var def_vars
-%type <func> def_func def_funcs
+%type <func> def_func
 %type <param> params param param_tail
 %type <stat> stat
 %type <exp> exps exp_or exp_and exp_comp exp_somasub exp_divmul exp_unary
             exp_atomic exp_base primitiva exp_tail var exp chamada_func exp_var
-             
-
+%type <def> defs def programa
 %%
  
-programa : def_vars def_funcs               { GLOBAL_TREE = prognode($1, $2); }
+programa : defs                               { GLOBAL_TREE = $1; }
+         | %empty                             { $$ = NULL; }
 
+defs : def                                   { $$ = defseq($1, NULL); }
+     | def defs                              { $$ = defseq($1, $2); }
+
+def : def_var                                { $$ = def(DEFVAR, $1, NULL); } 
+    | def_func                               { $$ = def(DEFFUNC, NULL, $1); }
 
 def_var : TK_ID ':' tipo ';'                { $$ = vardef($1, $3); }
 
@@ -56,9 +62,6 @@ def_vars : %empty                           { $$ = NULL; }
 
 def_func : TK_ID '(' params ')'
          tipo_opt stat                      { $$ = func($1, $3, $5, $6) ;}
-
-def_funcs : %empty                          { $$ = NULL; }
-          | def_func def_funcs              { $$ = funcseq($1, $2) ;}
 
 tipo_nativo : TK_INT                        { $$ = newtype(INT); }
             | TK_CHAR                       { $$ = newtype(CHAR); }

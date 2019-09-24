@@ -8,8 +8,9 @@
 #include "monga.tab.h"
 #include "lex.yy.h"
 #include "ast.h"
+#include "printtree.h"
 
-struct prog *GLOBAL_TREE;
+union def *GLOBAL_TREE;
 
 static void usage(const char *prog) {
     fprintf(stderr,
@@ -55,11 +56,6 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "error fopen output file: %s\n", strerror(errno));
             exit(-1);
         }
-
-        if (dup2(fileno(fout), 2) < 0) {
-            fprintf(stderr, "couldn't redirect stderr: %s\n", strerror(errno));
-            exit(-1);
-        }
     }
 
     if (!fin) {
@@ -74,6 +70,7 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 
+    print_tree();
     printf("accepted\n");
     fclose(fin);
     if (strcmp(outputfile, "\0"))
