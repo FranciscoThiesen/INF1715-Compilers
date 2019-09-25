@@ -18,6 +18,7 @@ enum def_types {
 
 enum exp_type {
     VAR,
+    VARID,
     CALLEXP,
     AS,
     NEW,

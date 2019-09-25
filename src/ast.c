@@ -303,7 +303,7 @@ union exps *newexp(union type *type, union exps *e1) {
 union exps *newvarid(char *name) {
     union exps *exp = tryalloc(sizeof(union exps));
 
-    exp->tag = VAR;
+    exp->tag = VARID;
     exp->var.name = name;
     exp->var.next = NULL;
 
@@ -312,8 +312,11 @@ union exps *newvarid(char *name) {
 
 union exps *listexp(union exps *e1, union exps *e2) {
     switch(e1->tag) {
-        case VAR:
+        case VARID:
             e1->var.next = e2;
+            break;
+        case VAR:
+            e1->binary.next = e2;
             break;
         case CALLEXP:
             e1->call.next = e2;

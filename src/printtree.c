@@ -34,7 +34,6 @@ static void print_native_type( enum native_types type ) {
  
 static void print_type( int n_spaces, union type* type) {
     if( type != NULL ) {
-        //print_spaces( n_spaces );
         if( type->tag == SINGLE ) {
             print_native_type( type->single.type );
         }
@@ -65,7 +64,7 @@ static void print_params( struct param* param ) {
     }
 }
 
-static void print_expvar( int n_spaces, union exps *exp_var ) {
+static void print_expvarid( int n_spaces, union exps *exp_var ) {
     print_spaces( n_spaces, 1);
     printf("SIMPLEVAR = %s\n", exp_var->var.name );
 }
@@ -89,6 +88,16 @@ static void print_new( int n_spaces, union type *type, union exps *exp) {
     print_exp( n_spaces + TABSTOP, exp );
     print_spaces( n_spaces + TABSTOP, 1);
     printf("]\n");
+    print_spaces ( n_spaces, 1);
+    printf("}");
+}
+
+static void print_as( int n_spaces, union exps *exp, union type *type) {
+    printf("AS {");
+    print_spaces( n_spaces + TABSTOP, 1);
+    printf("TYPE ");
+    print_type( 0, type );
+    print_exp( n_spaces + TABSTOP, exp );
     print_spaces ( n_spaces, 1);
     printf("}");
 }
@@ -133,7 +142,7 @@ static void print_eq( int n_spaces, union exps *e1, union exps *e2 ) {
 }
 
 static void print_neq( int n_spaces, union exps *e1, union exps *e2 ) {
-    printf("NOT EQUALS {" );
+    printf("NOT EQUAL {" );
     print_exp( n_spaces + TABSTOP, e1 );
     print_exp( n_spaces + TABSTOP, e2 );
     print_spaces( n_spaces, 1);
@@ -141,7 +150,7 @@ static void print_neq( int n_spaces, union exps *e1, union exps *e2 ) {
 }
 
 static void print_geq( int n_spaces, union exps *e1, union exps *e2 ) {
-    printf("GREATER OR EQUALS {" );
+    printf("GREATER OR EQUAL {" );
     print_exp( n_spaces + TABSTOP, e1 );
     print_exp( n_spaces + TABSTOP, e2 );
     print_spaces( n_spaces, 1);
@@ -150,7 +159,7 @@ static void print_geq( int n_spaces, union exps *e1, union exps *e2 ) {
 
 
 static void print_leq( int n_spaces, union exps *e1, union exps *e2 ) {
-    printf("LESS OR EQUALS {" );
+    printf("LESS OR EQUAL {" );
     print_exp( n_spaces + TABSTOP, e1 );
     print_exp( n_spaces + TABSTOP, e2 );
     print_spaces( n_spaces, 1);
@@ -190,12 +199,47 @@ static void print_sub( int n_spaces, union exps *e1, union exps *e2 ) {
     printf("}");
 }
 
+static void print_mul( int n_spaces, union exps *e1, union exps *e2 ) {
+    printf("MUL {" );
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_exp( n_spaces + TABSTOP, e2 );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
+static void print_div( int n_spaces, union exps *e1, union exps *e2 ) {
+    printf("DIV {" );
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_exp( n_spaces + TABSTOP, e2 );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
+static void print_expvar( int n_spaces, union exps *e1, union exps *e2) {
+    printf("NOTSOSIMPLEVAR {");
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_exp( n_spaces + TABSTOP, e2 );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
+static void print_minus( int n_spaces, union exps *e1 ) {
+    printf("MINUS {");
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
 static void print_exp( int n_spaces, union exps *exp ) {
     if( exp != NULL ) {
         print_spaces( n_spaces, 1);
         switch( exp->tag ) {
             case VAR:
-                print_expvar( n_spaces, exp );
+                print_expvar( n_spaces, exp->binary.e1, exp->binary.e2 );
+                print_exp( n_spaces, exp->binary.next );
+                break;
+            case VARID:
+                print_expvarid( n_spaces, exp );
                 print_exp( n_spaces, exp->var.next );
                 break;
             case CALLEXP:
@@ -203,6 +247,8 @@ static void print_exp( int n_spaces, union exps *exp ) {
                 print_exp( n_spaces, exp->call.next );
                 break;
             case AS:
+                print_as (n_spaces, exp->as.exp, exp->as.type);
+                print_exp( n_spaces, exp->as.next );
                 break;
             case NEW:
                 print_new( n_spaces, exp->new.type, exp->new.exp );
@@ -214,6 +260,18 @@ static void print_exp( int n_spaces, union exps *exp ) {
                 break;
             case SUB:
                 print_sub( n_spaces, exp->binary.e1, exp->binary.e2 );
+                print_exp( n_spaces, exp->binary.next );
+                break;
+            case MINUS:
+                print_minus( n_spaces, exp->unary.exp );
+                print_exp( n_spaces, exp->unary.next );
+                break;
+            case MUL:
+                print_mul( n_spaces, exp->binary.e1, exp->binary.e2 );
+                print_exp( n_spaces, exp->binary.next );
+                break;
+            case DIV:
+                print_div( n_spaces, exp->binary.e1, exp->binary.e2 );
                 print_exp( n_spaces, exp->binary.next );
                 break;
             case EXPINT:
@@ -299,22 +357,16 @@ static void print_if( int n_spaces, union exps *exp, struct stat *stat ) {
 }
 
 static void print_else( int n_spaces, struct stat *stat ) {
-    //print_spaces( n_spaces );
-    //printf("ELSE ");
-    //print_stat( n_spaces, stat );
+    print_spaces( n_spaces, 0 );
+    printf("ELSE ");
+    print_stat( n_spaces, stat );
 }
 
 
 static void print_ifelse ( int n_spaces, union exps *exp, struct stat *stat, struct stat *stat2 ) {
     print_if( n_spaces, exp, stat );
     print_else( n_spaces, stat2 );
-    /*printf("IFELSE");
-    print_exp( n_spaces, exp);
-    print_spaces( n_spaces );
-    print_stat( n_spaces, stat );
-    print_spaces( n_spaces );
-    print_stat( n_spaces, stat2 );
-    */
+    print_spaces( n_spaces, 0);
 }
 
 static void print_ret (int n_spaces) {
@@ -356,7 +408,7 @@ static void print_cmd( int n_spaces, union cmd *cmd ) {
             break;
         case IFELSE:
             print_ifelse( n_spaces, cmd->cmd_ifelse.exp, cmd->cmd_ifelse.stat, cmd->cmd_ifelse.stat2 );
-            print_cmd( n_spaces, cmd->cmd_if.next );
+            print_cmd( n_spaces, cmd->cmd_ifelse.next );
             break;
         case RET:
             print_ret( n_spaces );
@@ -368,6 +420,7 @@ static void print_cmd( int n_spaces, union cmd *cmd ) {
             break;
         case WHILE:
             print_while( n_spaces, cmd->cmd_while.exp, cmd->cmd_while.stat);
+            print_cmd( n_spaces, cmd->cmd_while.next );
             break;
         case PRINT:
             print_print( n_spaces, cmd->print.exp);
@@ -393,6 +446,7 @@ static void print_cmd( int n_spaces, union cmd *cmd ) {
 static void print_stat( int n_spaces, struct stat *stat ) {
     if (!stat)
         return;
+
     printf("{\n");
     print_var( n_spaces + TABSTOP, stat->vars);
     print_cmd( n_spaces + TABSTOP, stat->cmds);
@@ -434,6 +488,5 @@ void print_defs(union def *def) {
 }
  
 void print_tree() {
-    printf("%p\n", GLOBAL_TREE);
     print_defs(GLOBAL_TREE);
 }
