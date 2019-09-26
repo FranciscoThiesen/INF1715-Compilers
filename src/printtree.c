@@ -5,13 +5,13 @@
 static void print_stat( int n_spaces, struct stat *stat);
 static void print_exp( int n_spaces, union exps *exp );
 
-static void print_spaces( int n ) {
-    printf("\n");
+static void print_spaces( int n, int line_skip ) {
+    if( line_skip ) printf("\n");
     for(int i = 0; i < n; ++i) {
         printf(" ");
     }
 }
- 
+
 static void print_native_type( enum native_types type ) {
     switch( type ) {
         case INT:
@@ -48,7 +48,7 @@ static void print_type( int n_spaces, union type* type) {
  
 static void print_var( int n_spaces, struct var *v ) {
     if( v != NULL ) {
-        print_spaces( n_spaces );
+        print_spaces( n_spaces, 1);
         print_type( 0, v->type );
         printf(" %s", v->name );
         print_var( n_spaces, v->next );
@@ -66,44 +66,133 @@ static void print_params( struct param* param ) {
 }
 
 static void print_expvar( int n_spaces, union exps *exp_var ) {
-    print_spaces( n_spaces );
+    print_spaces( n_spaces, 1);
     printf("SIMPLEVAR = %s\n", exp_var->var.name );
 }
 
 static void print_call( int n_spaces, union exps *exp ) {
 
     printf("CALL %s", exp->call.name);
-    print_spaces( n_spaces );
+    print_spaces( n_spaces, 1);
     printf("ARGS {");
     print_exp( n_spaces + TABSTOP, exp->call.listexp );
-    print_spaces( n_spaces );
+    print_spaces( n_spaces, 1);
     printf("}\n");
 }
 
 static void print_new( int n_spaces, union type *type, union exps *exp) {
     printf("NEW {");
-    print_spaces( n_spaces + TABSTOP );
+    print_spaces( n_spaces + TABSTOP, 1);
     printf("TYPE ");
     print_type( 0, type );
     printf(" [\n");
     print_exp( n_spaces + TABSTOP, exp );
-    print_spaces( n_spaces + TABSTOP );
+    print_spaces( n_spaces + TABSTOP, 1);
     printf("]\n");
-    print_spaces ( n_spaces );
-    printf("}\n");
+    print_spaces ( n_spaces, 1);
+    printf("}");
 }
 
-static void print_expatt ( int n_spaces, union exps *e1, union exps *e2) {
+static void print_expatt( int n_spaces, union exps *e1, union exps *e2) {
     printf("ASSIGN {");
     print_exp( n_spaces + TABSTOP, e1 );
     print_exp( n_spaces + TABSTOP, e2 );
-    print_spaces( n_spaces );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
+static void print_or( int n_spaces, union exps *e1, union exps *e2 ) {
+    printf("OR {");
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_exp( n_spaces + TABSTOP, e2 );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
+static void print_and( int n_spaces, union exps *e1, union exps *e2 ) {
+    printf("AND {");
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_exp( n_spaces + TABSTOP, e2 );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
+static void print_not( int n_spaces, union exps *e1 ) {
+    printf("NOT {");
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
+static void print_eq( int n_spaces, union exps *e1, union exps *e2 ) {
+    printf("EQUALS {" );
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_exp( n_spaces + TABSTOP, e2 );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
+static void print_neq( int n_spaces, union exps *e1, union exps *e2 ) {
+    printf("NOT EQUALS {" );
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_exp( n_spaces + TABSTOP, e2 );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
+static void print_geq( int n_spaces, union exps *e1, union exps *e2 ) {
+    printf("GREATER OR EQUALS {" );
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_exp( n_spaces + TABSTOP, e2 );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
+
+static void print_leq( int n_spaces, union exps *e1, union exps *e2 ) {
+    printf("LESS OR EQUALS {" );
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_exp( n_spaces + TABSTOP, e2 );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
+
+static void print_less( int n_spaces, union exps *e1, union exps *e2 ) {
+    printf("LESS {" );
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_exp( n_spaces + TABSTOP, e2 );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
+static void print_greater( int n_spaces, union exps *e1, union exps *e2 ) {
+    printf("GREATER {" );
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_exp( n_spaces + TABSTOP, e2 );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
+static void print_sum( int n_spaces, union exps *e1, union exps *e2 ) {
+    printf("SUM {" );
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_exp( n_spaces + TABSTOP, e2 );
+    print_spaces( n_spaces, 1);
+    printf("}");
+}
+
+static void print_sub( int n_spaces, union exps *e1, union exps *e2 ) {
+    printf("SUB {" );
+    print_exp( n_spaces + TABSTOP, e1 );
+    print_exp( n_spaces + TABSTOP, e2 );
+    print_spaces( n_spaces, 1);
     printf("}");
 }
 
 static void print_exp( int n_spaces, union exps *exp ) {
     if( exp != NULL ) {
-        print_spaces( n_spaces );
+        print_spaces( n_spaces, 1);
         switch( exp->tag ) {
             case VAR:
                 print_expvar( n_spaces, exp );
@@ -117,43 +206,81 @@ static void print_exp( int n_spaces, union exps *exp ) {
                 break;
             case NEW:
                 print_new( n_spaces, exp->new.type, exp->new.exp );
-                print_exp( n_spaces, exp->call.next );
+                print_exp( n_spaces, exp->new.next );
                 break;
             case SUM:
+                print_sum( n_spaces, exp->binary.e1, exp->binary.e2 );
+                print_exp( n_spaces, exp->binary.next );
                 break;
             case SUB:
+                print_sub( n_spaces, exp->binary.e1, exp->binary.e2 );
+                print_exp( n_spaces, exp->binary.next );
                 break;
             case EXPINT:
+                print_spaces( n_spaces, 1);
+                printf("INT %d", exp->expint.i );
+                print_exp( n_spaces, exp->expint.next );
                 break;
             case EXPFLOAT:
+                print_spaces( n_spaces, 1);
+                printf("FLOAT %lf", exp->expfloat.d );
+                print_exp( n_spaces, exp->expfloat.next );
                 break;
             case EXPCHAR:
+                print_spaces( n_spaces, 1);
+                printf("CHAR %c", exp->expchar.c );
+                print_exp( n_spaces, exp->expchar.next );
                 break;
             case EXPSTR:
+                print_spaces( n_spaces, 1);
+                printf("STRING %s", exp->expstr.str );
+                print_exp( n_spaces, exp->expstr.next );
                 break;
             case EXPBOOL:
+                print_spaces( n_spaces, 1);
+                printf("BOOL ");
+                printf( exp->expbool.b ? "TRUE" : "FALSE" );
+                print_exp( n_spaces, exp->expbool.next );
                 break;
             case EXPATT:
                 print_expatt ( n_spaces, exp->binary.e1, exp->binary.e2 );
                 print_exp( n_spaces, exp->binary.next );
                 break;
             case EQ:
+                print_eq( n_spaces, exp->binary.e1, exp->binary.e2 );
+                print_exp( n_spaces, exp->binary.next );
                 break;
             case NEQ:
+                print_neq( n_spaces, exp->binary.e1, exp->binary.e2 );
+                print_exp( n_spaces, exp->binary.next );
                 break;
             case LEQ:
+                print_leq( n_spaces, exp->binary.e1, exp->binary.e2 );
+                print_exp( n_spaces, exp->binary.next );
                 break;
             case GEQ:
+                print_geq( n_spaces, exp->binary.e1, exp->binary.e2 );
+                print_exp( n_spaces, exp->binary.next );
                 break;
             case L:
+                print_less( n_spaces, exp->binary.e1, exp->binary.e2 );
+                print_exp( n_spaces, exp->binary.next );
                 break;
             case G:
+                print_greater( n_spaces, exp->binary.e1, exp->binary.e2 );
+                print_exp( n_spaces, exp->binary.next );
                 break;
             case NOT:
+                print_not( n_spaces, exp->unary.exp );
+                print_exp( n_spaces, exp->unary.next );
                 break;
             case AND:
+                print_and( n_spaces, exp->binary.e1, exp->binary.e2 );
+                print_exp( n_spaces, exp->binary.next );
                 break;
             case OR:
+                print_or ( n_spaces, exp->binary.e1, exp->binary.e2 );
+                print_exp( n_spaces, exp->binary.next );
                 break;
             default:
                 fprintf(stderr, "Unknown expression %d!\n", exp->tag);
@@ -163,19 +290,31 @@ static void print_exp( int n_spaces, union exps *exp ) {
 }
 
 static void print_if( int n_spaces, union exps *exp, struct stat *stat ) {
-    printf("IF");
-    print_exp( n_spaces, exp);
-    print_spaces( n_spaces );
+    printf("IF (");
+    print_exp( n_spaces + TABSTOP, exp);
+    print_spaces( n_spaces, 1);
+    printf(")\n");
+    print_spaces( n_spaces, 1);
     print_stat( n_spaces, stat );
 }
 
+static void print_else( int n_spaces, struct stat *stat ) {
+    //print_spaces( n_spaces );
+    //printf("ELSE ");
+    //print_stat( n_spaces, stat );
+}
+
+
 static void print_ifelse ( int n_spaces, union exps *exp, struct stat *stat, struct stat *stat2 ) {
-    printf("IFELSE");
+    print_if( n_spaces, exp, stat );
+    print_else( n_spaces, stat2 );
+    /*printf("IFELSE");
     print_exp( n_spaces, exp);
     print_spaces( n_spaces );
     print_stat( n_spaces, stat );
     print_spaces( n_spaces );
     print_stat( n_spaces, stat2 );
+    */
 }
 
 static void print_ret (int n_spaces) {
@@ -183,21 +322,25 @@ static void print_ret (int n_spaces) {
 }
 
 static void print_retexp( int n_spaces, union exps *exp ) {
-    printf("RETEXP");
-    print_exp( n_spaces, exp);
+    printf("RETEXP {");
+    print_exp( n_spaces + TABSTOP, exp);
+    print_spaces( n_spaces, 1);
+    printf("}");
 }
 
 static void print_while ( int n_spaces, union exps *exp, struct stat *stat ) {
-    printf("WHILE");
-    print_exp( n_spaces, exp);
-    print_spaces( n_spaces );
+    printf("WHILE (");
+    print_exp( n_spaces + TABSTOP, exp);
+    print_spaces( n_spaces, 1);
+    printf(")\n");
+    print_spaces( n_spaces, 0);
     print_stat( n_spaces, stat );
 }
 
 static void print_print( int n_spaces, union exps *exp ) {
     printf("PRINT {");
     print_exp( n_spaces + TABSTOP, exp);
-    print_spaces( n_spaces );
+    print_spaces( n_spaces, 1);
     printf("}");
 }
 
@@ -205,7 +348,7 @@ static void print_cmd( int n_spaces, union cmd *cmd ) {
     if (!cmd)
         return;
 
-    print_spaces( n_spaces );
+    print_spaces( n_spaces, 1);
     switch ( cmd->tag ) {
         case IF:
             print_if( n_spaces, cmd->cmd_if.exp, cmd->cmd_if.stat);
@@ -250,17 +393,16 @@ static void print_cmd( int n_spaces, union cmd *cmd ) {
 static void print_stat( int n_spaces, struct stat *stat ) {
     if (!stat)
         return;
-
     printf("{\n");
     print_var( n_spaces + TABSTOP, stat->vars);
     print_cmd( n_spaces + TABSTOP, stat->cmds);
-    print_spaces( n_spaces);
+    print_spaces( n_spaces, 1);
     printf("}\n");
 }
 
 static void print_func( int n_spaces, struct func* f ) {
     if( f != NULL ) {
-        print_spaces( n_spaces );
+        print_spaces( n_spaces, 1);
         printf("FUNC< ");
         print_type( 0, f->type );
         printf(" > ");
@@ -268,9 +410,9 @@ static void print_func( int n_spaces, struct func* f ) {
         printf("PARAMS = {");
         print_params( f->param );
         printf("}\n");
-        print_spaces( n_spaces );
+        print_spaces( n_spaces, 1);
         print_stat( n_spaces, f->stat );
-        print_spaces( n_spaces );
+        print_spaces( n_spaces, 1);
         print_func( n_spaces, f->next );
     }
 }
