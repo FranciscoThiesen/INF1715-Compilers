@@ -1,11 +1,8 @@
 accepted
 
     FUNC< INT >  main, PARAMS = {}
-
     {
-
         INT i
         FLOAT j
-    }
 
-    
+    }

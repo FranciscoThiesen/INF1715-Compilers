@@ -1,100 +1,60 @@
 accepted
 
     FUNC< BOOL >  dumb, PARAMS = {a FLOAT}
-
     {
-
         IF (
             LESS {
-                
                 SIMPLEVAR = a
-
-                
                 INT 0
             }
         )
-
         {
-
             RETEXP {
-                
                 BOOL TRUE
             }
         }
-
         RETEXP {
-            
             BOOL FALSE
         }
     }
-
-    
     FUNC< INT >  main, PARAMS = {}
-
     {
-
         FLOAT f
         FLOAT a
         [CHAR] c
         CHAR c2
         INT i
         BOOL b
-        
         ASSIGN {
-            
             SIMPLEVAR = f
-
-            
             FLOAT 2.156250
         }
-        
         ASSIGN {
-            
             SIMPLEVAR = a
-
             AS {
                 TYPE FLOAT
-                
                 INT 4
             }
         }
-        
         ASSIGN {
-            
             SIMPLEVAR = f
-
-            
             FLOAT 2.156250
         }
-        
         ASSIGN {
-            
             SIMPLEVAR = c
-
-            
             [CHAR] fdsa
 \"989
         }
-        
         ASSIGN {
-            
             SIMPLEVAR = c2
-
-            
             CHAR "
         }
-        
         ASSIGN {
-            
             SIMPLEVAR = b
-
             OR {
-                
                 BOOL FALSE
                 AND {
-                    
                     BOOL TRUE
-                    
                     BOOL FALSE
                 }
             }
@@ -106,82 +66,49 @@ accepted
                     DIV {
                         MUL {
                             SUM {
-                                
                                 FLOAT 2.000000
-                                
                                 FLOAT 32000000000.000000
                             }
-                            
                             INT 15
                         }
-                        
                         INT 2
                     }
                 }
 
-                
                 SIMPLEVAR = b
-
             }
         )
-
         {
-
             PRINT {
-                
                 SIMPLEVAR = f
-
             }
             PRINT {
-                
                 SIMPLEVAR = c
-
             }
-        }
-        ELSE {
-
+        } ELSE
+        {
             PRINT {
-                
                 SIMPLEVAR = c2
-
             }
             PRINT {
-                
                 SIMPLEVAR = a
-
             }
-        }
-        
-        
+        }        
         ASSIGN {
-            
             SIMPLEVAR = f
-
-            
             FLOAT 0.223400
         }
         PRINT {
-            
             SIMPLEVAR = f
-
         }
-        
         ASSIGN {
-            
             SIMPLEVAR = f
-
-            
             FLOAT 0.223400
         }
         PRINT {
-            
             SIMPLEVAR = f
-
         }
         RETEXP {
-            
             INT 0
         }
     }
-
-    

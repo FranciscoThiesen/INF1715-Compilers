@@ -1,0 +1,165 @@
+accepted
+    [[[INT]]] i
+    INT k
+    CHAR j
+
+    FUNC< INT >  main, PARAMS = {a INT, c [CHAR]}
+    {
+        RETEXP {
+            INT 14
+        }
+    }
+    FUNC< FLOAT >  main2, PARAMS = {}
+    {
+        [INT] i
+        INT j
+        FLOAT k
+        ASSIGN {
+            SIMPLEVAR = k
+            OR {
+                SIMPLEVAR = i
+                SIMPLEVAR = j
+            }
+        }
+        ASSIGN {
+            SIMPLEVAR = j
+            AND {
+                SIMPLEVAR = k
+                SIMPLEVAR = i
+            }
+        }
+        ASSIGN {
+            SIMPLEVAR = j
+            NOT {
+                SIMPLEVAR = k
+            }
+        }
+        ASSIGN {
+            SIMPLEVAR = k
+            EQUALS {
+                SIMPLEVAR = i
+                SIMPLEVAR = j
+            }
+        }
+        ASSIGN {
+            SIMPLEVAR = k
+            NOT EQUAL {
+                SIMPLEVAR = i
+                SIMPLEVAR = j
+            }
+        }
+        ASSIGN {
+            SIMPLEVAR = k
+            GREATER {
+                SIMPLEVAR = i
+                SIMPLEVAR = j
+            }
+        }
+        ASSIGN {
+            SIMPLEVAR = k
+            LESS {
+                SIMPLEVAR = i
+                SIMPLEVAR = j
+            }
+        }
+        ASSIGN {
+            SIMPLEVAR = k
+            GREATER OR EQUAL {
+                SIMPLEVAR = i
+                SIMPLEVAR = j
+            }
+        }
+        ASSIGN {
+            SIMPLEVAR = k
+            LESS OR EQUAL {
+                SIMPLEVAR = j
+                SIMPLEVAR = i
+            }
+        }
+        ASSIGN {
+            SIMPLEVAR = k
+            SUM {
+                SIMPLEVAR = i
+                SIMPLEVAR = j
+            }
+        }
+        ASSIGN {
+            SIMPLEVAR = k
+            SUB {
+                SIMPLEVAR = i
+                SIMPLEVAR = j
+            }
+        }
+        ASSIGN {
+            SIMPLEVAR = a
+            NEW {
+                TYPE INT [
+                INT 20
+                ]
+
+            }
+        }
+        IF (
+            EQUALS {
+                SIMPLEVAR = j
+                INT 1
+            }
+        )
+        {
+            CALL main
+            ARGS {
+                SIMPLEVAR = i
+                SIMPLEVAR = j
+                SIMPLEVAR = k
+            }
+
+            PRINT {
+                SIMPLEVAR = s
+            }
+            ASSIGN {
+                SIMPLEVAR = s
+                CHAR c
+            }
+            ASSIGN {
+                SIMPLEVAR = s
+                [CHAR] ABACABADABACABA
+            }
+            ASSIGN {
+                SIMPLEVAR = s
+                BOOL FALSE
+            }
+            ASSIGN {
+                SIMPLEVAR = s
+                BOOL TRUE
+            }
+        }
+        ASSIGN {
+            SIMPLEVAR = i
+            SUM {
+                SUM {
+                    INT 2
+                    INT 3
+                }
+                INT 10
+            }
+        }
+        WHILE (
+            LESS {
+                SIMPLEVAR = i
+                INT 7
+            }
+        )
+        {
+            ASSIGN {
+                SIMPLEVAR = i
+                SUM {
+                    SIMPLEVAR = i
+                    INT 1
+                }
+            }
+        }
+    }
+    FUNC< CHAR >  main3, PARAMS = {}
+    {
+
+    }    CHAR k

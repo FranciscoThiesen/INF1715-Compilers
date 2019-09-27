@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
     if (yyparse())
         exit(-1);
 
-	printf("accepted\n");
+    printf("accepted\n");
     print_tree();
     fclose(fin);
     if (strcmp(outputfile, "\0"))
