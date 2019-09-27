@@ -32,14 +32,14 @@ static void print_native_type( enum native_types type ) {
     }
 }
  
-static void print_type( int n_spaces, union type* type) {
+static void print_type( union type* type) {
     if( type != NULL ) {
         if( type->tag == SINGLE ) {
             print_native_type( type->single.type );
         }
         else {
             printf("[");
-            print_type( 0, type->seq.next );
+            print_type( type->seq.next );
             printf("]");
         }
     }
@@ -48,7 +48,7 @@ static void print_type( int n_spaces, union type* type) {
 static void print_var( int n_spaces, struct var *v ) {
     if( v != NULL ) {
         print_spaces( n_spaces, 1);
-        print_type( 0, v->type );
+        print_type( v->type );
         printf(" %s", v->name );
         print_var( n_spaces, v->next );
     }
@@ -57,7 +57,7 @@ static void print_var( int n_spaces, struct var *v ) {
 static void print_params( struct param* param ) {
     if( param == NULL ) return;
     printf("%s ", param->name );
-    print_type( 0, param->type );
+    print_type( param->type );
     if( param->next != NULL ) {
         printf(", ");
         print_params( param->next );
@@ -83,7 +83,7 @@ static void print_new( int n_spaces, union type *type, union exps *exp) {
     printf("NEW {");
     print_spaces( n_spaces + TABSTOP, 1);
     printf("TYPE ");
-    print_type( 0, type );
+    print_type( type );
     printf(" [\n");
     print_exp( n_spaces + TABSTOP, exp );
     print_spaces( n_spaces + TABSTOP, 1);
@@ -96,7 +96,7 @@ static void print_as( int n_spaces, union exps *exp, union type *type) {
     printf("AS {");
     print_spaces( n_spaces + TABSTOP, 1);
     printf("TYPE ");
-    print_type( 0, type );
+    print_type( type );
     print_exp( n_spaces + TABSTOP, exp );
     print_spaces ( n_spaces, 1);
     printf("}");
@@ -276,28 +276,32 @@ static void print_exp( int n_spaces, union exps *exp ) {
                 break;
             case EXPINT:
                 print_spaces( n_spaces, 1);
-                printf("INT %d", exp->expint.i );
+                print_type( exp->expint.type );
+                printf(" %d", exp->expint.i );
                 print_exp( n_spaces, exp->expint.next );
                 break;
             case EXPFLOAT:
                 print_spaces( n_spaces, 1);
-                printf("FLOAT %lf", exp->expfloat.d );
+                print_type( exp->expfloat.type );
+                printf(" %lf", exp->expfloat.d );
                 print_exp( n_spaces, exp->expfloat.next );
                 break;
             case EXPCHAR:
                 print_spaces( n_spaces, 1);
-                printf("CHAR %c", exp->expchar.c );
+                print_type( exp->expchar.type );
+                printf(" %c", exp->expchar.c );
                 print_exp( n_spaces, exp->expchar.next );
                 break;
             case EXPSTR:
                 print_spaces( n_spaces, 1);
-                printf("STRING %s", exp->expstr.str );
+                print_type( exp->expstr.type );
+                printf(" %s", exp->expstr.str );
                 print_exp( n_spaces, exp->expstr.next );
                 break;
             case EXPBOOL:
                 print_spaces( n_spaces, 1);
-                printf("BOOL ");
-                printf( exp->expbool.b ? "TRUE" : "FALSE" );
+                print_type( exp->expbool.type );
+                printf( exp->expbool.b ? " TRUE" : " FALSE" );
                 print_exp( n_spaces, exp->expbool.next );
                 break;
             case EXPATT:
@@ -458,7 +462,7 @@ static void print_func( int n_spaces, struct func* f ) {
     if( f != NULL ) {
         print_spaces( n_spaces, 1);
         printf("FUNC< ");
-        print_type( 0, f->type );
+        print_type( f->type );
         printf(" > ");
         printf(" %s, ", f->name );
         printf("PARAMS = {");

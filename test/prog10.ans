@@ -1,1 +1,10 @@
 accepted
+
+    FUNC<  >  main, PARAMS = {}
+
+    {
+
+        INT i
+    }
+
+    

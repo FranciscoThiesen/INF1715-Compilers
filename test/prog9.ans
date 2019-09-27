@@ -1,1 +1,127 @@
 accepted
+
+    FUNC< INT >  random, PARAMS = {}
+
+    {
+
+        RETEXP {
+            
+            INT 13
+        }
+    }
+
+    
+    FUNC< INT >  wow, PARAMS = {useless INT}
+
+    {
+
+        INT x
+        
+        ASSIGN {
+            
+            SIMPLEVAR = x
+
+            CALL random
+            ARGS {
+            }
+
+        }
+        RETEXP {
+            NOT EQUAL {
+                
+                SIMPLEVAR = random
+
+                
+                INT 13
+            }
+        }
+    }
+
+    
+    FUNC< INT >  main, PARAMS = {}
+
+    {
+
+        [INT] memo
+        INT i
+        
+        ASSIGN {
+            
+            SIMPLEVAR = i
+
+            
+            INT 0
+        }
+        WHILE (
+            LESS {
+                
+                SIMPLEVAR = i
+
+                
+                INT 255
+            }
+        )
+        {
+
+            
+            ASSIGN {
+                NOTSOSIMPLEVAR {
+                    
+                    SIMPLEVAR = memo
+
+                    
+                    SIMPLEVAR = i
+
+                }
+                SUM {
+                    MUL {
+                        
+                        SIMPLEVAR = i
+
+                        
+                        INT 42
+                    }
+                    CALL wow
+                    ARGS {
+                    }
+
+                }
+            }
+            
+            ASSIGN {
+                
+                SIMPLEVAR = i
+
+                SUM {
+                    SUM {
+                        
+                        SIMPLEVAR = i
+
+                        
+                        INT 13
+                    }
+                    CALL wow
+                    ARGS {
+                    }
+
+                }
+            }
+        }
+
+        PRINT {
+            
+            INT 255
+        }
+        PRINT {
+            
+            [CHAR] Goodbye World
+        }
+        RETEXP {
+            MINUS {
+                
+                INT 1
+            }
+        }
+    }
+
+    

@@ -1,1 +1,212 @@
 accepted
+
+    FUNC< [INT] >  main, PARAMS = {}
+
+    {
+
+        [INT] vet
+        INT i
+        WHILE (
+            LESS {
+                
+                SIMPLEVAR = i
+
+                
+                INT 20
+            }
+        )
+        {
+
+            
+            ASSIGN {
+                NOTSOSIMPLEVAR {
+                    
+                    SIMPLEVAR = vet
+
+                    
+                    SIMPLEVAR = i
+
+                }
+                
+                SIMPLEVAR = i
+
+            }
+            
+            ASSIGN {
+                
+                SIMPLEVAR = i
+
+                SUM {
+                    
+                    SIMPLEVAR = i
+
+                    
+                    INT 1
+                }
+            }
+        }
+
+        
+        ASSIGN {
+            
+            SIMPLEVAR = i
+
+            DIV {
+                
+                SIMPLEVAR = i
+
+                
+                INT 2
+            }
+        }
+        
+        ASSIGN {
+            
+            SIMPLEVAR = i
+
+            MUL {
+                
+                SIMPLEVAR = i
+
+                
+                INT 2
+            }
+        }
+        IF (
+            AND {
+                LESS OR EQUAL {
+                    
+                    SIMPLEVAR = i
+
+                    
+                    INT 20
+                }
+                EQUALS {
+                    
+                    INT 1
+                    
+                    INT 1
+                }
+            }
+        )
+
+        {
+
+            PRINT {
+                
+                SIMPLEVAR = i
+
+            }
+        }
+
+        IF (
+            LESS {
+                
+                SIMPLEVAR = i
+
+                
+                INT 20
+            }
+        )
+
+        {
+
+            PRINT {
+                
+                SIMPLEVAR = i
+
+            }
+        }
+
+        
+        ASSIGN {
+            
+            SIMPLEVAR = i
+
+            SUB {
+                
+                SIMPLEVAR = i
+
+                
+                INT 1
+            }
+        }
+        IF (
+            OR {
+                GREATER OR EQUAL {
+                    
+                    SIMPLEVAR = i
+
+                    
+                    INT 19
+                }
+                NOT EQUAL {
+                    
+                    INT 2
+                    
+                    INT 2
+                }
+            }
+        )
+
+        {
+
+            PRINT {
+                
+                SIMPLEVAR = i
+
+            }
+        }
+
+        IF (
+            GREATER {
+                
+                SIMPLEVAR = i
+
+                
+                INT 19
+            }
+        )
+
+        {
+
+            PRINT {
+                
+                SIMPLEVAR = i
+
+            }
+        }
+
+        
+        ASSIGN {
+            
+            SIMPLEVAR = i
+
+            
+            INT 0
+        }
+        IF (
+            NOT {
+                
+                SIMPLEVAR = i
+
+            }
+        )
+
+        {
+
+            PRINT {
+                
+                SIMPLEVAR = i
+
+            }
+        }
+
+        RETEXP {
+            
+            SIMPLEVAR = vet
+
+        }
+    }
+
+    

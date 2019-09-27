@@ -145,22 +145,14 @@ static char handleescape(char escaped) {
 }
 
 static char *stringcpy() {
-    char *newstr = (char *) tryalloc(yyleng + 1);
-    int i = 0, j = 0;
+    char *newstr = (char *) tryalloc(yyleng - 1);
+    int i, j;
 
-    while(yytext[i]) {
-        if (yytext[i] == '\\') {
-            newstr[j] = handleescape(yytext[i + 1]);
-            i++;
-        } else if (yytext[i] == '"') {
-            goto nextchar;
-        } else {
-            newstr[j] = yytext[i];
-        }
-        j++;
-
-        nextchar:
-        i++;
+    for (i = 0, j = 1; j < yyleng - 1; i++, j++) {
+        if (yytext[j] == '\\')
+            newstr[i] = handleescape(yytext[++j]);
+        else
+            newstr[i] = yytext[j];
     }
 
     return newstr;

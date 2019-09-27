@@ -1,2 +1,161 @@
-syntax error, unexpected TK_RET, expecting '{' in line 4
-rejected
+accepted
+
+    FUNC< INT >  fib, PARAMS = {x INT}
+
+    {
+
+        IF (
+            LESS OR EQUAL {
+                
+                SIMPLEVAR = x
+
+                
+                INT 2
+            }
+        )
+
+        {
+
+            RETEXP {
+                
+                INT 1
+            }
+        }
+
+        RETEXP {
+            MUL {
+                CALL fib
+                ARGS {
+                    SUB {
+                        
+                        SIMPLEVAR = x
+
+                        
+                        INT 1
+                    }
+                }
+
+                CALL fib
+                ARGS {
+                    SUB {
+                        
+                        SIMPLEVAR = x
+
+                        
+                        INT 2
+                    }
+                }
+
+            }
+        }
+    }
+
+    
+    FUNC< BOOL >  wow_such_an_important_function, PARAMS = {}
+
+    {
+
+        RETEXP {
+            
+            BOOL FALSE
+        }
+    }
+
+    
+    FUNC< INT >  main, PARAMS = {}
+
+    {
+
+        INT a
+        
+        ASSIGN {
+            
+            SIMPLEVAR = a
+
+            
+            INT 13
+        }
+        PRINT {
+            CALL fib
+            ARGS {
+                
+                SIMPLEVAR = a
+
+            }
+
+        }
+        
+        ASSIGN {
+            
+            SIMPLEVAR = a
+
+            
+            FLOAT 16128.000000
+        }
+        PRINT {
+            CALL fib
+            ARGS {
+                
+                SIMPLEVAR = a
+
+            }
+
+        }
+        
+        ASSIGN {
+            
+            SIMPLEVAR = a
+
+            
+            [CHAR] abacabadabacaba
+        }
+        PRINT {
+            CALL fib
+            ARGS {
+                
+                SIMPLEVAR = a
+
+            }
+
+        }
+        PRINT {
+            CALL fib
+            ARGS {
+                CALL fib
+                ARGS {
+                    
+                    SIMPLEVAR = a
+
+                }
+
+            }
+
+        }
+        
+        ASSIGN {
+            
+            SIMPLEVAR = a
+
+            
+            CHAR f
+        }
+        PRINT {
+            CALL fib
+            ARGS {
+                
+                SIMPLEVAR = a
+
+            }
+
+        }
+        RETEXP {
+            NOT {
+                CALL wow_such_an_important_function
+                ARGS {
+                }
+
+            }
+        }
+    }
+
+    

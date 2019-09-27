@@ -65,13 +65,11 @@ int main(int argc, char *argv[]) {
 
     yyrestart(fin);
 
-    if (yyparse()) {
-        printf("rejected\n");
+    if (yyparse())
         exit(-1);
-    }
 
+	printf("accepted\n");
     print_tree();
-    printf("accepted\n");
     fclose(fin);
     if (strcmp(outputfile, "\0"))
         fclose(fout);
