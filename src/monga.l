@@ -1,3 +1,4 @@
+%option noyywrap
 %{
 //Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 

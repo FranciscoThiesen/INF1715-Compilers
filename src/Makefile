@@ -12,13 +12,14 @@ DARWIN=Darwin
 UNAME=$(shell uname)
 
 ifeq ($(UNAME),$(DARWIN))
-LDFLAGS=-ll -Wextra
+LDFLAGS=-ll
 else
-LDFLAGS=-lfl -Wextra
+LDFLAGS=-lfl
 endif
+CFLAGS=-Wextra
 
 $(MONGAC): $(SRCS)
-	$(CC) -o $@ $(LDFLAGS) $(SRCS)
+	$(CC) $(CFLAGS) -o $@ $(SRCS) $(LDFLAGS)
 
 $(LEXSRC): $(LEXFILE)
 	lex --header-file=lex.yy.h $<
