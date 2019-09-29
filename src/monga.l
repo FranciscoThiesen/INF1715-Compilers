@@ -1,4 +1,6 @@
 %option noyywrap
+%option noinput
+%option nounput
 %{
 //Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
@@ -149,7 +151,7 @@ static char *stringcpy() {
     char *newstr = (char *) tryalloc(yyleng - 1);
     int i, j;
 
-    for (i = 0, j = 1; j < yyleng - 1; i++, j++) {
+    for (i = 0, j = 1; j < (int) yyleng - 1; i++, j++) {
         if (yytext[j] == '\\')
             newstr[i] = handleescape(yytext[++j]);
         else

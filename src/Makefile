@@ -16,7 +16,7 @@ LDFLAGS=-ll
 else
 LDFLAGS=-lfl
 endif
-CFLAGS=-Wextra
+CFLAGS=-Wextra -Wall
 
 $(MONGAC): $(SRCS)
 	$(CC) $(CFLAGS) -o $@ $(SRCS) $(LDFLAGS)

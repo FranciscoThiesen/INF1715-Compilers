@@ -66,7 +66,7 @@ static void print_params( struct param* param ) {
     }
 }
 
-static void print_expvarid( int n_spaces, union exps *exp_var ) {
+static void print_expvarid( union exps *exp_var ) {
     printf("SIMPLEVAR = %s", exp_var->var.name );
 }
 
@@ -256,7 +256,7 @@ static void print_exp( int n_spaces, union exps *exp ) {
                 print_exp( n_spaces, exp->binary.next );
                 break;
             case VARID:
-                print_expvarid( n_spaces, exp );
+                print_expvarid( exp );
                 if( exp->var.next ) puts("");
                 print_exp( n_spaces, exp->var.next );
                 break;

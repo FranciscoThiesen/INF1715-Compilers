@@ -211,7 +211,9 @@ union cmd *attcmd(union exps *att) {
 
     cmd->tag = ATTCMD;
     cmd->att.att = att;
-    cmd->att.next;
+    cmd->att.next = NULL;
+
+    return cmd;
 }
 
 union cmd *newseqcmd(union cmd *c1, union cmd *c2) {
