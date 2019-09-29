@@ -1,3 +1,6 @@
+//Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+
+
 #ifndef __AST
 #define __AST
 #include <stdio.h>
