@@ -131,7 +131,7 @@ exp_unary : '-' exp_unary                   { $$ = unaryexp(MINUS, $2); }
 
 exp_atomic : exp_base                       { $$ = $1; }
            | exp_base TK_AS tipo            { $$ = asexp($1, $3); }
-           | TK_NEW tipo '[' exp_somasub ']'{ $$ = newexp($2, $4); }
+           | TK_NEW tipo '[' exp ']'        { $$ = newexp($2, $4); }
 
 exp_base : primitiva                        { $$ = $1; }
          | chamada_func                     { $$ = $1; }
