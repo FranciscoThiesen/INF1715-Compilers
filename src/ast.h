@@ -68,7 +68,7 @@ enum types {
 };
 
 union type {
-    enum types tag;
+    Types tag;
     struct {
         Types tag;
         Native_types type;

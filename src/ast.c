@@ -17,32 +17,38 @@ static void *tryalloc(size_t size) {
     return newptr;
 }
 
-Def *def(Def_types type, Var *var, Func *func) {
+static Def *defvar(Var *var) {
     Def *newdef = tryalloc(sizeof(Def));
+    newdef->tag = DEFVAR;
+    newdef->vars.vars = var;
+    newdef->vars.next = NULL;
+    return newdef;
+}
 
+static Def *deffunc(Func *func) {
+    Def *newdef = tryalloc(sizeof(Def));
+    newdef->tag = DEFFUNC;
+    newdef->funcs.funcs = func;
+    newdef->funcs.next = NULL;
+    return newdef;
+}
+
+Def *def(Def_types type, Var *var, Func *func) {
     switch (type){
         case DEFVAR:
-            newdef->tag = DEFVAR;
-            newdef->vars.vars = var;
-            newdef->vars.next = NULL;
-            break;
+            return defvar(var);
         case DEFFUNC:
-            newdef->tag = DEFFUNC;
-            newdef->funcs.funcs = func;
-            newdef->funcs.next = NULL;
-            break;
+            return deffunc(func);
         default:
             fprintf(stderr, "unknown type\n");    
             exit(-1);
     }
-
-    return newdef;
+    return NULL;
 }
 
 Def *defseq(Def *delem, Def *dlist) {
     if (!delem)
         return dlist;
-
     switch (delem->tag){
         case DEFVAR:
             delem->vars.next= dlist;
@@ -54,7 +60,6 @@ Def *defseq(Def *delem, Def *dlist) {
             fprintf(stderr, "unknown type\n");    
             exit(-1);
     }
-
     return delem;
 }
 
@@ -70,7 +75,6 @@ Var *vardef(char *name, Type *type) {
 
 Var *varseqdef(Var *v1, Var *v2) {
     Var *vaux;
-
     if (!v1) {
         v2->next = v1;
         return v2;
@@ -146,44 +150,75 @@ Stat *newstat(Var *var, Cmd *cmd) {
     return stat;
 }
 
-Cmd *newcmd(Cmd_type tag, Exps *exp, Stat *stat, Stat *stat2) {
+static Cmd *newcmd_if(Exps *exp, Stat *stat) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
+    cmd->tag = IF;
+    cmd->cmd_if.exp = exp;
+    cmd->cmd_if.stat = stat;
+    cmd->cmd_if.next = NULL;
+    return cmd;
+}
 
-    cmd->tag = tag;
+static Cmd *newcmd_ifelse(Exps *exp, Stat *stat, Stat *stat2) {
+    Cmd *cmd = tryalloc(sizeof(Cmd));
+    cmd->tag = IFELSE;
+    cmd->cmd_ifelse.exp = exp;
+    cmd->cmd_ifelse.stat = stat;
+    cmd->cmd_ifelse.stat2 = stat2;
+    cmd->cmd_ifelse.next = NULL;
+    return cmd;
+}
+
+static Cmd *newcmd_while(Exps *exp, Stat *stat) {
+    Cmd *cmd = tryalloc(sizeof(Cmd));
+    cmd->tag = WHILE;
+    cmd->cmd_while.exp = exp;
+    cmd->cmd_while.stat = stat;
+    cmd->cmd_while.next = NULL;
+    return cmd;
+}
+
+static Cmd *newcmd_retexp(Exps *exp) {
+    Cmd *cmd = tryalloc(sizeof(Cmd));
+    cmd->tag = RETEXP;
+    cmd->cmd_ret_exp.exp = exp;
+    cmd->cmd_ret_exp.next = NULL;
+    return cmd;
+}
+
+static Cmd *newcmd_ret() {
+    Cmd *cmd = tryalloc(sizeof(Cmd));
+    cmd->tag = RET;
+    cmd->cmd_ret.next = NULL;
+    return cmd;
+}
+
+static Cmd *newcmd_print(Exps *exp) {
+    Cmd *cmd = tryalloc(sizeof(Cmd));
+    cmd->tag = PRINT;
+    cmd->print.exp = exp;
+    cmd->print.next = NULL;
+    return cmd;
+}
+
+Cmd *newcmd(Cmd_type tag, Exps *exp, Stat *stat, Stat *stat2) {
     switch (tag) {
         case IF:
-            cmd->cmd_if.exp = exp;
-            cmd->cmd_if.stat = stat;
-            cmd->cmd_if.next = NULL;
-            break;
+            return newcmd_if(exp, stat);
         case IFELSE:
-            cmd->cmd_ifelse.exp = exp;
-            cmd->cmd_ifelse.stat = stat;
-            cmd->cmd_ifelse.stat2 = stat2;
-            cmd->cmd_ifelse.next = NULL;
-            break;
+            return newcmd_ifelse(exp, stat, stat2);
         case WHILE:
-            cmd->cmd_while.exp = exp;
-            cmd->cmd_while.stat = stat;
-            cmd->cmd_while.next = NULL;
-            break;
+            return newcmd_while(exp, stat);
         case RETEXP:
-            cmd->cmd_ret_exp.exp = exp;
-            cmd->cmd_ret_exp.next = NULL;
-            break;
+            return newcmd_retexp(exp);
         case RET:
-            cmd->cmd_ret.next = NULL;
-            break;
+            return newcmd_ret();
         case PRINT:
-            cmd->print.exp = exp;
-            cmd->print.next = NULL;
-            break;
+            return newcmd_print(exp);
         default:
             fprintf(stderr, "unknown command type\n");
             exit(-1);
     }
-
-    return cmd;
 }
 
 Cmd *callcmd(Exps *call) {
