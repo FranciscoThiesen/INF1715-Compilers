@@ -46,11 +46,11 @@ void yyerror(const char *);
 %type <func> def_func
 %type <param> params param param_tail
 %type <stat> stat
-%type <exp> exps exp_or exp_and exp_comp exp_somasub exp_divmul exp_unary
+%type <exp> exps exp_and exp_comp exp_somasub exp_divmul exp_unary
             exp_atomic exp_base primitiva exp_tail var exp chamada_func exp_var
 %type <def> defs def programa
 %%
- 
+
 programa : defs                               { GLOBAL_TREE = $1; }
          | %empty                             { $$ = NULL; }
 
@@ -78,42 +78,40 @@ tipo : tipo_nativo                          { $$ = $1; }
 
 tipo_opt : %empty                           { $$ = NULL; }
          | ':' tipo                         { $$ = $2; }
- 
+
 params : %empty                             { $$ = NULL; }
        | param param_tail                   { $$ = newparamseq($1, $2); }
- 
+
 param : TK_ID ':' tipo                      { $$ = newparam($1, $3); }
- 
+
 param_tail : %empty                         { $$ = NULL; }
            | ',' param param_tail           { $$ = newparamseq($2, $3); }
- 
+
 stat : '{' def_vars cmds '}'                { $$ = newstat($2, $3); }
- 
+
 cmds : %empty                               { $$ = NULL; }
      | cmd cmds                             { $$ = newseqcmd($1, $2); }
- 
+
 cmd : TK_IF '(' exp ')' stat                { $$ = newcmd(IF, $3, $5, NULL); }
     | TK_IF '(' exp ')' stat TK_ELSE stat   { $$ = newcmd(IFELSE, $3, $5, $7); }
     | TK_RET ';'                            { $$ = newcmd(RET, NULL, NULL, NULL); }
-    | TK_RET exp_or ';'                     { $$ = newcmd(RETEXP, $2, NULL, NULL); }
+    | TK_RET exp ';'                        { $$ = newcmd(RETEXP, $2, NULL, NULL); }
     | TK_WHILE '(' exp ')' stat             { $$ = newcmd(WHILE, $3, $5, NULL); }
     | TK_PRINT exp ';'                      { $$ = newcmd(PRINT, $2, NULL, NULL); }
     | stat                                  { $$ = statcmd($1); }
     | chamada_func ';'                      { $$ = callcmd($1); }
     | exp_var ';'                           { $$ = attcmd($1); }
- 
+
 chamada_func : TK_ID '(' exps ')'           { $$ = callexp($1, $3); }
- 
+
 exp_var : var '=' exp                       { $$ = binaryexp(EXPATT, $1, $3); };
 
-exp : exp_or                                { $$ = $1; }
- 
-exp_or : exp_or TK_OR exp_and               { $$ = binaryexp(OR, $1, $3); }
-       | exp_and                            { $$ = $1; }
- 
+exp : exp TK_OR exp_and                     { $$ = binaryexp(OR, $1, $3); }
+    | exp_and                               { $$ = $1; }
+
 exp_and : exp_and TK_AND exp_comp           { $$ = binaryexp(AND, $1, $3); }
         | exp_comp                          { $$ = $1; }
- 
+
 exp_comp : exp_comp TK_EQUALS exp_somasub   { $$ = binaryexp(EQ, $1, $3); }
          | exp_comp TK_NEQUALS exp_somasub  { $$ = binaryexp(NEQ, $1, $3); }
          | exp_comp TK_GEQUALS exp_somasub  { $$ = binaryexp(GEQ, $1, $3); }
@@ -125,11 +123,11 @@ exp_comp : exp_comp TK_EQUALS exp_somasub   { $$ = binaryexp(EQ, $1, $3); }
 exp_somasub : exp_somasub '+' exp_divmul    { $$ = binaryexp(SUM, $1, $3); }
             | exp_somasub '-' exp_divmul    { $$ = binaryexp(SUB, $1, $3); }
             | exp_divmul                    { $$ = $1; }
- 
+
 exp_divmul : exp_divmul '*' exp_unary       { $$ = binaryexp(MUL, $1, $3); }
            | exp_divmul '/' exp_unary       { $$ = binaryexp(DIV, $1, $3); }
            | exp_unary                      { $$ = $1; }
- 
+
 exp_unary : '-' exp_unary                   { $$ = unaryexp(MINUS, $2); }
           | '!' exp_unary                   { $$ = unaryexp(NOT, $2); }
           | exp_atomic                      { $$ = $1; }
@@ -151,14 +149,14 @@ primitiva : TK_RAWINT                       { $$ = newint($1); }
           | '(' exp ')'                     { $$ = $2; }
 
 exps : %empty                               { $$ = NULL; }
-     | exp_or exp_tail                      { $$ = listexp($1, $2); }
- 
+     | exp exp_tail                         { $$ = listexp($1, $2); }
+
 exp_tail : %empty                           { $$ = NULL; }
-         | ',' exp_or exp_tail              { $$ = listexp($2, $3); }
- 
-var : exp_base '[' exp_somasub ']'          { $$ = binaryexp(VAR, $1, $3); }
+         | ',' exp exp_tail                 { $$ = listexp($2, $3); }
+
+var : exp_base '[' exp ']'                  { $$ = binaryexp(VAR, $1, $3); }
     | TK_ID                                 { $$ = newvarid($1); }
- 
+
 %%
 
 void yyerror (char const *s) {
