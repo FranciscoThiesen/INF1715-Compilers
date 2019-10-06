@@ -7,6 +7,21 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+
+typedef struct var Var;
+typedef struct param Param;
+typedef struct func Func;
+typedef struct stat Stat;
+typedef union cmd Cmd;
+typedef union type Type;
+typedef union exps Exps;
+typedef union def Def;
+typedef enum native_types Native_types;
+typedef enum def_types Def_types;
+typedef enum exp_type Exp_type;
+typedef enum types Types;
+typedef enum cmd_type Cmd_type;
+
 enum native_types {
     INT,
     CHAR,
@@ -55,80 +70,80 @@ enum types {
 union type {
     enum types tag;
     struct {
-        enum types tag;
-        enum native_types type;
+        Types tag;
+        Native_types type;
     } single;
     struct {
-        enum types tag;
-        union type *next;
+        Types tag;
+        Type *next;
     } seq;
 };
 
 union exps {
-    enum exp_type tag;
+    Exp_type tag;
     struct {
-        enum exp_type tag;
+        Exp_type tag;
         char *name;
-        union exps *next;
+        Exps *next;
     } var;
     struct {
-        enum exp_type tag;
+        Exp_type tag;
         char *name;
-        union exps *listexp;
-        union exps *next;
+        Exps *listexp;
+        Exps *next;
     } call;
     struct {
-        enum exp_type tag;
-        union exps *exp;
-        union type *type;
-        union exps *next;
+        Exp_type tag;
+        Exps *exp;
+        Type *type;
+        Exps *next;
     } as;
     struct {
-        enum exp_type tag;
-        union type *type;
-        union exps *exp;
-        union exps *next;
+        Exp_type tag;
+        Type *type;
+        Exps *exp;
+        Exps *next;
     } new;
     struct {
-        enum exp_type tag;
-        union exps *e1;
-        union exps *e2;
-        union exps *next;
+        Exp_type tag;
+        Exps *e1;
+        Exps *e2;
+        Exps *next;
     } binary;
     struct {
-        enum exp_type tag;
-        union exps *exp;
-        union exps *next;
+        Exp_type tag;
+        Exps *exp;
+        Exps *next;
     } unary;
     struct {
-        enum exp_type tag;
+        Exp_type tag;
         int i;
-        union type *type;
-        union exps *next;
+        Type *type;
+        Exps *next;
     } expint;
     struct {
-        enum exp_type tag;
+        Exp_type tag;
         double d;
-        union type *type;
-        union exps *next;
+        Type *type;
+        Exps *next;
     } expfloat;
     struct {
-        enum exp_type tag;
+        Exp_type tag;
         char c;
-        union type *type;
-        union exps *next;
+        Type *type;
+        Exps *next;
     } expchar;
     struct {
-        enum exp_type tag;
+        Exp_type tag;
         char *str;
-        union type *type;
-        union exps *next;
+        Type *type;
+        Exps *next;
     } expstr;
     struct {
-        enum exp_type tag;
+        Exp_type tag;
         bool b;
-        union type *type;
-        union exps *next;
+        Type *type;
+        Exps *next;
     } expbool;
 };
 
@@ -146,125 +161,123 @@ enum cmd_type {
 
 struct var {
     char *name;
-    union type *type;
-    struct var *next;
+    Type *type;
+    Var *next;
 };
 
 struct param {
     char *name;
-    union type *type;
-    struct param *next;
+    Type *type;
+    Param *next;
 };
 
 struct func {
     char *name;
-    struct param *param;
-    union type *type;
-    struct stat *stat;
-    struct func *next;
+    Param *param;
+    Type *type;
+    Stat *stat;
+    Func *next;
 };
 
 union def {
-    enum def_types tag;
+    Def_types tag;
     struct {
-        enum def_types tag;
-        struct var *vars; 
-        union def *next;
+        Def_types tag;
+        Var *vars; 
+        Def *next;
     } vars;
     struct {
-        enum def_types tag;
-        struct func *funcs;
-        union def *next;
+        Def_types tag;
+        Func *funcs;
+        Def *next;
     } funcs;
 };
 
 union cmd {
     enum cmd_type tag;
     struct {
-        enum cmd_type tag;
-        union exps *exp;
-        struct stat *stat;
-        union cmd *next;
+        Cmd_type tag;
+        Exps *exp;
+        Stat *stat;
+        Cmd *next;
     } cmd_if;
     struct {
-        enum cmd_type tag;
-        union exps *exp;
-        struct stat *stat;
-        union cmd *next;
+        Cmd_type tag;
+        Exps *exp;
+        Stat *stat;
+        Cmd *next;
     } cmd_while;
     struct {
-        enum cmd_type tag;
-        union exps *exp;
-        union cmd *next;
+        Cmd_type tag;
+        Exps *exp;
+        Cmd *next;
     } cmd_ret_exp;
     struct {
-        enum cmd_type tag;
-        union cmd *next;
+        Cmd_type tag;
+        Cmd *next;
     } cmd_ret;
     struct {
-        enum cmd_type tag;
-        union exps *exp;
-        struct stat *stat;
-        struct stat *stat2;
-        union cmd *next;
+        Cmd_type tag;
+        Exps *exp;
+        Stat *stat;
+        Stat *stat2;
+        Cmd *next;
     } cmd_ifelse;
     struct {
-        enum cmd_type tag;
-        union exps *exp;
-        union cmd *next;
+        Cmd_type tag;
+        Exps *exp;
+        Cmd *next;
     } print;
     struct {
-        enum cmd_type tag;
-        union exps *call;
-        union cmd *next;
+        Cmd_type tag;
+        Exps *call;
+        Cmd *next;
     } call;
     struct {
-        enum cmd_type tag;
-        struct stat *stat;
-        union cmd *next;
+        Cmd_type tag;
+        Stat *stat;
+        Cmd *next;
     } stat;
     struct {
-        enum cmd_type tag;
-        union exps *att;
-        union cmd *next;
+        Cmd_type tag;
+        Exps *att;
+        Cmd *next;
     } att;
 };
 
 struct stat {
-    struct var *vars;
-    union cmd *cmds;
+    Var *vars;
+    Cmd *cmds;
 };
 
-extern union def *GLOBAL_TREE;
-
-extern union def *def(enum def_types type, struct var *var, struct func *func);
-extern union def *defseq(union def *delem, union def *dlist);
-extern struct var *vardef(char *name, union type *type);
-extern struct var *varseqdef(struct var *v1, struct var *v2);
-extern struct func *func(char *name, struct param *params, union type * type,
-        struct stat *stat);
-extern struct func *funcseq(struct func *f1, struct func *f2);
-extern union type *newtype(enum native_types ntype);
-extern union type *newseqtype(union type *t1);
-extern struct param *newparamseq(struct param *p1, struct param *p2);
-extern struct param *newparam(char *name, union type *type);
-extern struct stat *newstat(struct var *var, union cmd *cmd);
-extern union cmd *newcmd(enum cmd_type tag, union exps *exp, struct stat *stat, struct stat *stat2);
-extern union cmd *newseqcmd(union cmd *c1, union cmd *c2);
-extern union cmd *callcmd(union exps *call);
-extern union cmd *attcmd(union exps *att);
-extern union cmd *statcmd(struct stat *stat);
-extern union exps *unaryexp(enum exp_type tag, union exps *e1);
-extern union exps *binaryexp(enum exp_type tag, union exps *e1, union exps *e2);
-extern union exps *callexp(char *name, union exps *e1);
-extern union exps *newexp(union type *type, union exps *e1);
-extern union exps *newvarid(char *name);
-extern union exps *listexp(union exps *e1, union exps *e2);
-extern struct prog *prognode(struct var *vars, struct func *funcs);
-extern union exps *newint(int i);
-extern union exps *newfloat(double d);
-extern union exps *newchar(char c);
-extern union exps *newstr(char *s);
-extern union exps *newbool(bool b);
-extern union exps *asexp(union exps *e1, union type *type);
+extern Def *GLOBAL_TREE;
+extern Def *def(Def_types type, Var *var, Func *func);
+extern Def *defseq(Def *delem, Def *dlist);
+extern Var *vardef(char *name, Type *type);
+extern Var *varseqdef(Var *v1, Var *v2);
+extern Func *func(char *name, Param *params, Type * type,
+        Stat *stat);
+extern Func *funcseq(Func *f1, Func *f2);
+extern Type *newtype(Native_types ntype);
+extern Type *newseqtype(Type *t1);
+extern Param *newparamseq(Param *p1, Param *p2);
+extern Param *newparam(char *name, Type *type);
+extern Stat *newstat(Var *var, Cmd *cmd);
+extern Cmd *newcmd(Cmd_type tag, Exps *exp, Stat *stat, Stat *stat2);
+extern Cmd *newseqcmd(Cmd *c1, Cmd *c2);
+extern Cmd *callcmd(Exps *call);
+extern Cmd *attcmd(Exps *att);
+extern Cmd *statcmd(Stat *stat);
+extern Exps *unaryexp(Exp_type tag, Exps *e1);
+extern Exps *binaryexp(Exp_type tag, Exps *e1, Exps *e2);
+extern Exps *callexp(char *name, Exps *e1);
+extern Exps *newexp(Type *type, Exps *e1);
+extern Exps *newvarid(char *name);
+extern Exps *listexp(Exps *e1, Exps *e2);
+extern Exps *newint(int i);
+extern Exps *newfloat(double d);
+extern Exps *newchar(char c);
+extern Exps *newstr(char *s);
+extern Exps *newbool(bool b);
+extern Exps *asexp(Exps *e1, Type *type);
 #endif

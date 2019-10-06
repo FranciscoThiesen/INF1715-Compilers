@@ -10,7 +10,7 @@
 #include "ast.h"
 #include "printtree.h"
 
-union def *GLOBAL_TREE;
+Def *GLOBAL_TREE;
 
 static void usage(const char *prog) {
     fprintf(stderr,

@@ -17,8 +17,8 @@ static void *tryalloc(size_t size) {
     return newptr;
 }
 
-union def *def(enum def_types type, struct var *var, struct func *func) {
-    union def *newdef = tryalloc(sizeof(union def));
+Def *def(Def_types type, Var *var, Func *func) {
+    Def *newdef = tryalloc(sizeof(Def));
 
     switch (type){
         case DEFVAR:
@@ -39,7 +39,7 @@ union def *def(enum def_types type, struct var *var, struct func *func) {
     return newdef;
 }
 
-union def *defseq(union def *delem, union def *dlist) {
+Def *defseq(Def *delem, Def *dlist) {
     if (!delem)
         return dlist;
 
@@ -58,8 +58,8 @@ union def *defseq(union def *delem, union def *dlist) {
     return delem;
 }
 
-struct var *vardef(char *name, union type *type) {
-    struct var *var = tryalloc(sizeof(struct var));
+Var *vardef(char *name, Type *type) {
+    Var *var = tryalloc(sizeof(Var) );
 
     var->name = name;
     var->type = type;
@@ -68,8 +68,8 @@ struct var *vardef(char *name, union type *type) {
     return var;
 }
 
-struct var *varseqdef(struct var *v1, struct var *v2) {
-    struct var *vaux;
+Var *varseqdef(Var *v1, Var *v2) {
+    Var *vaux;
 
     if (!v1) {
         v2->next = v1;
@@ -85,9 +85,9 @@ struct var *varseqdef(struct var *v1, struct var *v2) {
     return v1;
 }
 
-struct func *func(char *name, struct param *params, union type * type,
-        struct stat *stat) {
-    struct func *func = tryalloc(sizeof(struct func));
+Func *func(char *name, Param *params, Type * type,
+        Stat *stat) {
+    Func *func = tryalloc(sizeof(Func));
 
     func->name = name;
     func->param = params;
@@ -98,14 +98,14 @@ struct func *func(char *name, struct param *params, union type * type,
     return func;
 }
 
-struct func *funcseq(struct func *f1, struct func *f2) {
+Func *funcseq(Func *f1, Func *f2) {
     f1->next = f2;
 
     return f1;
 }
 
-union type *newtype(enum native_types ntype) {
-    union type *type = tryalloc(sizeof(union type));
+Type *newtype(Native_types ntype) {
+    Type *type = tryalloc(sizeof(Type));
 
     type->tag = SINGLE;
     type->single.type = ntype;
@@ -113,8 +113,8 @@ union type *newtype(enum native_types ntype) {
     return type;
 }
 
-union type *newseqtype(union type *t1) {
-    union type *type = tryalloc(sizeof(union type));
+Type *newseqtype(Type *t1) {
+    Type *type = tryalloc(sizeof(Type));
 
     type->tag = SEQ;
     type->seq.next = t1;
@@ -122,14 +122,14 @@ union type *newseqtype(union type *t1) {
     return type;
 }
 
-struct param *newparamseq(struct param *p1, struct param *p2) {
+Param *newparamseq(Param *p1, Param *p2) {
     p1->next = p2;
 
     return p1;
 }
 
-struct param *newparam(char *name, union type *type) {
-    struct param *param = tryalloc(sizeof(struct param));
+Param *newparam(char *name, Type *type) {
+    Param *param = tryalloc(sizeof(Param));
 
     param->name = name;
     param->type = type;
@@ -137,8 +137,8 @@ struct param *newparam(char *name, union type *type) {
     return param;
 }
 
-struct stat *newstat(struct var *var, union cmd *cmd) {
-    struct stat *stat = tryalloc(sizeof(struct stat));
+Stat *newstat(Var *var, Cmd *cmd) {
+    Stat *stat = tryalloc(sizeof(Stat));
 
     stat->vars = var;
     stat->cmds = cmd;
@@ -146,8 +146,8 @@ struct stat *newstat(struct var *var, union cmd *cmd) {
     return stat;
 }
 
-union cmd *newcmd(enum cmd_type tag, union exps *exp, struct stat *stat, struct stat *stat2) {
-    union cmd *cmd = tryalloc(sizeof(union cmd));
+Cmd *newcmd(Cmd_type tag, Exps *exp, Stat *stat, Stat *stat2) {
+    Cmd *cmd = tryalloc(sizeof(Cmd));
 
     cmd->tag = tag;
     switch (tag) {
@@ -186,8 +186,8 @@ union cmd *newcmd(enum cmd_type tag, union exps *exp, struct stat *stat, struct 
     return cmd;
 }
 
-union cmd *callcmd(union exps *call) {
-    union cmd *cmd = tryalloc(sizeof(union cmd));
+Cmd *callcmd(Exps *call) {
+    Cmd *cmd = tryalloc(sizeof(Cmd));
 
     cmd->tag = CALLCMD;
     cmd->call.call = call;
@@ -196,8 +196,8 @@ union cmd *callcmd(union exps *call) {
     return cmd;
 }
 
-union cmd *statcmd(struct stat *stat) {
-    union cmd *cmd = tryalloc(sizeof(union cmd));
+Cmd *statcmd(Stat *stat) {
+    Cmd *cmd = tryalloc(sizeof(Cmd));
 
     cmd->tag = STAT;
     cmd->stat.stat = stat;
@@ -206,8 +206,8 @@ union cmd *statcmd(struct stat *stat) {
     return cmd;
 }
 
-union cmd *attcmd(union exps *att) {
-    union cmd *cmd = tryalloc(sizeof(union cmd));
+Cmd *attcmd(Exps *att) {
+    Cmd *cmd = tryalloc(sizeof(Cmd));
 
     cmd->tag = ATTCMD;
     cmd->att.att = att;
@@ -216,7 +216,7 @@ union cmd *attcmd(union exps *att) {
     return cmd;
 }
 
-union cmd *newseqcmd(union cmd *c1, union cmd *c2) {
+Cmd *newseqcmd(Cmd *c1, Cmd *c2) {
     switch (c1->tag) {
         case IF:
             c1->cmd_if.next = c2;
@@ -250,8 +250,8 @@ union cmd *newseqcmd(union cmd *c1, union cmd *c2) {
     return c1;
 }
 
-union exps *unaryexp(enum exp_type tag, union exps *e1) {
-    union exps *exp = tryalloc(sizeof(union exps));
+Exps *unaryexp(Exp_type tag, Exps *e1) {
+    Exps *exp = tryalloc(sizeof(Exps));
 
     exp->tag = tag;
     exp->unary.exp = e1;
@@ -260,8 +260,8 @@ union exps *unaryexp(enum exp_type tag, union exps *e1) {
     return exp;
 }
 
-union exps *binaryexp(enum exp_type tag, union exps *e1, union exps *e2) {
-    union exps *exp = tryalloc(sizeof(union exps));
+Exps *binaryexp(Exp_type tag, Exps *e1, Exps *e2) {
+    Exps *exp = tryalloc(sizeof(Exps));
 
     exp->tag = tag;
     exp->binary.e1 = e1;
@@ -271,8 +271,8 @@ union exps *binaryexp(enum exp_type tag, union exps *e1, union exps *e2) {
     return exp;
 }
 
-union exps *asexp(union exps *e1, union type *type) {
-    union exps *exp = tryalloc(sizeof(union exps));
+Exps *asexp(Exps *e1, Type *type) {
+    Exps *exp = tryalloc(sizeof(Exps));
 
     exp->tag = AS;
     exp->as.type = type;
@@ -282,8 +282,8 @@ union exps *asexp(union exps *e1, union type *type) {
     return exp;
 }
 
-union exps *callexp(char *name, union exps *e1) {
-    union exps *exp = tryalloc(sizeof(union exps));
+Exps *callexp(char *name, Exps *e1) {
+    Exps *exp = tryalloc(sizeof(Exps));
 
     exp->tag = CALLEXP;
     exp->call.name = name;
@@ -293,8 +293,8 @@ union exps *callexp(char *name, union exps *e1) {
     return exp;
 }
 
-union exps *newexp(union type *type, union exps *e1) {
-    union exps *exp = tryalloc(sizeof(union exps));
+Exps *newexp(Type *type, Exps *e1) {
+    Exps *exp = tryalloc(sizeof(Exps));
 
     exp->tag = NEW;
     exp->new.type = type;
@@ -304,8 +304,8 @@ union exps *newexp(union type *type, union exps *e1) {
     return exp;
 }
 
-union exps *newvarid(char *name) {
-    union exps *exp = tryalloc(sizeof(union exps));
+Exps *newvarid(char *name) {
+    Exps *exp = tryalloc(sizeof(Exps));
 
     exp->tag = VARID;
     exp->var.name = name;
@@ -314,7 +314,7 @@ union exps *newvarid(char *name) {
     return exp;
 }
 
-union exps *listexp(union exps *e1, union exps *e2) {
+Exps *listexp(Exps *e1, Exps *e2) {
     switch(e1->tag) {
         case VARID:
             e1->var.next = e2;
@@ -393,8 +393,8 @@ union exps *listexp(union exps *e1, union exps *e2) {
     return e1;
 }
 
-union exps *newint(int i) {
-    union exps *exp = tryalloc(sizeof(union exps));
+Exps *newint(int i) {
+    Exps *exp = tryalloc(sizeof(Exps));
 
     exp->tag = EXPINT;
     exp->expint.i = i;
@@ -404,8 +404,8 @@ union exps *newint(int i) {
     return exp;
 }
 
-union exps *newfloat(double d) {
-    union exps *exp = tryalloc(sizeof(union exps));
+Exps *newfloat(double d) {
+    Exps *exp = tryalloc(sizeof(Exps));
 
     exp->tag = EXPFLOAT;
     exp->expfloat.d = d;
@@ -415,8 +415,8 @@ union exps *newfloat(double d) {
     return exp;
 }
 
-union exps *newchar(char c) {
-    union exps *exp = tryalloc(sizeof(union exps));
+Exps *newchar(char c) {
+    Exps *exp = tryalloc(sizeof(Exps));
 
     exp->tag = EXPCHAR;
     exp->expchar.c = c;
@@ -426,8 +426,8 @@ union exps *newchar(char c) {
     return exp;
 }
 
-union exps *newstr(char *s) {
-    union exps *exp = tryalloc(sizeof(union exps));
+Exps *newstr(char *s) {
+    Exps *exp = tryalloc(sizeof(Exps));
 
     exp->tag = EXPSTR;
     exp->expstr.str = s;
@@ -437,8 +437,8 @@ union exps *newstr(char *s) {
     return exp;
 }
 
-union exps *newbool(bool b) {
-    union exps *exp = tryalloc(sizeof(union exps));
+Exps *newbool(bool b) {
+    Exps *exp = tryalloc(sizeof(Exps));
 
     exp->tag = EXPBOOL;
     exp->expbool.b = b;
