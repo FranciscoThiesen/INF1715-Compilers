@@ -10,29 +10,34 @@
 
 %define parse.error verbose
 
+%code requires {
+#include "ast.h"
+
+}
+
 %{
 #include <stdio.h>
 #include "lex.yy.h"
 #include "monga.tab.h"
 #include "aux.h"
-#include "ast.h"
 
+typedef struct func Func;
 void yyerror(const char *);
 %}
 
 %union {
-    union type *type;
-    union exps *exp;
-    struct stat *stat;
-    union cmd *cmd;
-    struct param *param;
-    struct func *func;
-    struct var *var;
+    Type *type;
+    Exps *exp;
+    Stat *stat;
+    Cmd *cmd;
+    Param *param;
+    Func *func;
+    Var *var;
     int i;
     double d;
     char *str;
     char c;
-    union def *def;
+    Def *def;
     //int line;
 }
 %type <cmd> cmds cmd

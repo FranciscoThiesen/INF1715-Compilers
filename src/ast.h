@@ -11,7 +11,7 @@
 typedef struct var Var;
 typedef struct param Param;
 typedef struct func Func;
-typedef struct stat Stat;
+typedef struct stat_monga Stat;
 typedef union cmd Cmd;
 typedef union type Type;
 typedef union exps Exps;
@@ -245,7 +245,7 @@ union cmd {
     } att;
 };
 
-struct stat {
+struct stat_monga {
     Var *vars;
     Cmd *cmds;
 };
