@@ -83,11 +83,13 @@ union exps {
     struct {
         Exp_type tag;
         char *name;
+        Var *def;
         Exps *next;
     } var;
     struct {
         Exp_type tag;
         char *name;
+        Func *funcdef;
         Exps *listexp;
         Exps *next;
     } call;

@@ -1,6 +1,7 @@
 //Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
 #include "ast.h"
+#include "semantic.h"
 #include <stdio.h>
 #define TABSTOP 4
 
@@ -49,6 +50,7 @@ static void print_type( Type* type) {
 
 static void print_var( int n_spaces, Var *v ) {
     if( v != NULL ) {
+        insert_var(v);
         print_spaces( n_spaces, 0);
         print_type( v->type );
         printf(" %s\n", v->name );
@@ -58,6 +60,7 @@ static void print_var( int n_spaces, Var *v ) {
 
 static void print_params( Var* param ) {
     if( param == NULL ) return;
+    insert_var(param);
     printf("%s ", param->name );
     print_type( param->type );
     if( param->next != NULL ) {
@@ -67,12 +70,31 @@ static void print_params( Var* param ) {
 }
 
 static void print_expvarid( Exps *exp_var ) {
+    Var *v;
+
+    v = get_var(exp_var->var.name);
+    if (!v) {
+        fprintf(stderr, "undefined symbol %s\n", exp_var->var.name);
+        exit(-1);
+    }
+
+    exp_var->var.def = v;
+
     printf("SIMPLEVAR = %s", exp_var->var.name );
 }
 
 static void print_call( int n_spaces, Exps *exp ) {
 
+    Func *f;
+
     printf("CALL %s", exp->call.name);
+    f = get_func(exp->call.name);
+    if (!f) {
+        fprintf(stderr, "undefined function %s\n", exp->call.name);
+        exit(-1);
+    }
+
+    exp->call.funcdef = f;
     print_spaces( n_spaces, 1);
     printf("ARGS {\n");
     print_exp( n_spaces + TABSTOP, exp->call.listexp );
@@ -495,22 +517,28 @@ static void print_cmd( int n_spaces, Cmd *cmd ) {
 }
 
 static void print_stat( int n_spaces, Stat *stat ) {
-    if (!stat)
+    if (!stat) {
         return;
+    }
+
+    enter_scope();
     printf("{\n");
     print_var( n_spaces + TABSTOP, stat->vars);
     print_cmd( n_spaces + TABSTOP, stat->cmds);
     print_spaces( n_spaces, 1);
     printf("}");
+    leave_scope();
 }
 
 static void print_func( int n_spaces, Func* f ) {
     if( f != NULL ) {
+        insert_func(f);
         print_spaces( n_spaces, 1);
         printf("FUNC< ");
         print_type( f->type );
         printf(" > ");
         printf(" %s, ", f->name );
+        enter_scope();
         printf("PARAMS = {");
         print_params( f->param );
         printf("}\n");
@@ -518,6 +546,7 @@ static void print_func( int n_spaces, Func* f ) {
             print_spaces( n_spaces, 0);
             print_stat( n_spaces, f->stat );
         }
+        leave_scope();
         if( f->next ) {
             print_spaces( n_spaces, 1);
             print_func( n_spaces, f->next );
@@ -526,8 +555,9 @@ static void print_func( int n_spaces, Func* f ) {
 }
 
 void print_defs(Def *def) {
-    if (!def)
+    if (!def) {
         return;
+    }
 
     switch (def->tag) {
         case DEFVAR:

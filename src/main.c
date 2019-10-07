@@ -9,6 +9,7 @@
 #include "lex.yy.h"
 #include "ast.h"
 #include "printtree.h"
+#include "semantic.h"
 
 Def *GLOBAL_TREE;
 
@@ -69,8 +70,11 @@ int main(int argc, char *argv[]) {
         exit(-1);
 
     printf("accepted\n");
+    init_symbols();
     print_tree();
     fclose(fin);
     if (strcmp(outputfile, "\0"))
         fclose(fout);
+
+    clean_symbols();
 }
