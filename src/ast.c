@@ -1,21 +1,11 @@
 //Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
 #include "ast.h"
+#include "aux.h"
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-static void *tryalloc(size_t size) {
-    void *newptr = malloc(sizeof(char) * size);
-
-    if (!newptr) {
-        fprintf(stderr, "error: %s\n", strerror(ENOMEM));
-        exit(-1);
-    }
-
-    return newptr;
-}
 
 static Def *defvar(Var *var) {
     Def *newdef = tryalloc(sizeof(Def));
@@ -89,7 +79,7 @@ Var *varseqdef(Var *v1, Var *v2) {
     return v1;
 }
 
-Func *func(char *name, Param *params, Type * type,
+Func *func(char *name, Var *params, Type * type,
         Stat *stat) {
     Func *func = tryalloc(sizeof(Func));
 
@@ -126,14 +116,14 @@ Type *newseqtype(Type *t1) {
     return type;
 }
 
-Param *newparamseq(Param *p1, Param *p2) {
+Var *newparamseq(Var *p1, Var *p2) {
     p1->next = p2;
 
     return p1;
 }
 
-Param *newparam(char *name, Type *type) {
-    Param *param = tryalloc(sizeof(Param));
+Var *newparam(char *name, Type *type) {
+    Var *param = tryalloc(sizeof(Var));
 
     param->name = name;
     param->type = type;

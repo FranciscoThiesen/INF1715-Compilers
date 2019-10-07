@@ -56,7 +56,7 @@ static void print_var( int n_spaces, Var *v ) {
     }
 }
 
-static void print_params( Param* param ) {
+static void print_params( Var* param ) {
     if( param == NULL ) return;
     printf("%s ", param->name );
     print_type( param->type );

@@ -120,17 +120,6 @@ as                              { return TK_AS; }
 .                               { return yytext[0]; }
 %%
 
-static void *tryalloc(size_t size) {
-    void *newptr = malloc(sizeof(char) * size);
-
-    if (!newptr) {
-        fprintf(stderr, "error: %s\n", strerror(ENOMEM));
-        exit(-1);
-    }
-
-    return newptr;
-}
-
 static char handleescape(char escaped) {
     switch(escaped) {
         case 'n':

@@ -9,7 +9,6 @@
 
 
 typedef struct var Var;
-typedef struct param Param;
 typedef struct func Func;
 typedef struct stat_monga Stat;
 typedef union cmd Cmd;
@@ -165,15 +164,9 @@ struct var {
     Var *next;
 };
 
-struct param {
-    char *name;
-    Type *type;
-    Param *next;
-};
-
 struct func {
     char *name;
-    Param *param;
+    Var *param;
     Type *type;
     Stat *stat;
     Func *next;
@@ -255,13 +248,13 @@ extern Def *def(Def_types type, Var *var, Func *func);
 extern Def *defseq(Def *delem, Def *dlist);
 extern Var *vardef(char *name, Type *type);
 extern Var *varseqdef(Var *v1, Var *v2);
-extern Func *func(char *name, Param *params, Type * type,
+extern Func *func(char *name, Var *params, Type * type,
         Stat *stat);
 extern Func *funcseq(Func *f1, Func *f2);
 extern Type *newtype(Native_types ntype);
 extern Type *newseqtype(Type *t1);
-extern Param *newparamseq(Param *p1, Param *p2);
-extern Param *newparam(char *name, Type *type);
+extern Var *newparamseq(Var *p1, Var *p2);
+extern Var *newparam(char *name, Type *type);
 extern Stat *newstat(Var *var, Cmd *cmd);
 extern Cmd *newcmd(Cmd_type tag, Exps *exp, Stat *stat, Stat *stat2);
 extern Cmd *newseqcmd(Cmd *c1, Cmd *c2);

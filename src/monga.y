@@ -30,7 +30,6 @@ void yyerror(const char *);
     Exps *exp;
     Stat *stat;
     Cmd *cmd;
-    Param *param;
     Func *func;
     Var *var;
     int i;
@@ -42,9 +41,8 @@ void yyerror(const char *);
 }
 %type <cmd> cmds cmd
 %type <type> tipo_nativo tipo tipo_opt
-%type <var> def_var def_vars
+%type <var> def_var def_vars params param param_tail
 %type <func> def_func
-%type <param> params param param_tail
 %type <stat> stat
 %type <exp> exps exp_and exp_comp exp_somasub exp_divmul exp_unary
             exp_atomic exp_base primitiva exp_tail var exp chamada_func exp_var
@@ -80,12 +78,12 @@ tipo_opt : %empty                           { $$ = NULL; }
          | ':' tipo                         { $$ = $2; }
 
 params : %empty                             { $$ = NULL; }
-       | param param_tail                   { $$ = newparamseq($1, $2); }
+       | param param_tail                   { $$ = varseqdef($1, $2); }
 
-param : TK_ID ':' tipo                      { $$ = newparam($1, $3); }
+param : TK_ID ':' tipo                      { $$ = vardef($1, $3); }
 
 param_tail : %empty                         { $$ = NULL; }
-           | ',' param param_tail           { $$ = newparamseq($2, $3); }
+           | ',' param param_tail           { $$ = varseqdef($2, $3); }
 
 stat : '{' def_vars cmds '}'                { $$ = newstat($2, $3); }
 
