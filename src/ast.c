@@ -140,7 +140,7 @@ Stat *newstat(Var *var, Cmd *cmd) {
     return stat;
 }
 
-static Cmd *newcmd_if(Exps *exp, Stat *stat) {
+static Cmd *newcmd_if(Exp *exp, Stat *stat) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
     cmd->tag = IF;
     cmd->cmd_if.exp = exp;
@@ -149,7 +149,7 @@ static Cmd *newcmd_if(Exps *exp, Stat *stat) {
     return cmd;
 }
 
-static Cmd *newcmd_ifelse(Exps *exp, Stat *stat, Stat *stat2) {
+static Cmd *newcmd_ifelse(Exp *exp, Stat *stat, Stat *stat2) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
     cmd->tag = IFELSE;
     cmd->cmd_ifelse.exp = exp;
@@ -159,7 +159,7 @@ static Cmd *newcmd_ifelse(Exps *exp, Stat *stat, Stat *stat2) {
     return cmd;
 }
 
-static Cmd *newcmd_while(Exps *exp, Stat *stat) {
+static Cmd *newcmd_while(Exp *exp, Stat *stat) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
     cmd->tag = WHILE;
     cmd->cmd_while.exp = exp;
@@ -168,7 +168,7 @@ static Cmd *newcmd_while(Exps *exp, Stat *stat) {
     return cmd;
 }
 
-static Cmd *newcmd_retexp(Exps *exp) {
+static Cmd *newcmd_retexp(Exp *exp) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
     cmd->tag = RETEXP;
     cmd->cmd_ret_exp.exp = exp;
@@ -183,7 +183,7 @@ static Cmd *newcmd_ret() {
     return cmd;
 }
 
-static Cmd *newcmd_print(Exps *exp) {
+static Cmd *newcmd_print(Exp *exp) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
     cmd->tag = PRINT;
     cmd->print.exp = exp;
@@ -191,7 +191,7 @@ static Cmd *newcmd_print(Exps *exp) {
     return cmd;
 }
 
-Cmd *newcmd(Cmd_type tag, Exps *exp, Stat *stat, Stat *stat2) {
+Cmd *newcmd(Cmd_type tag, Exp *exp, Stat *stat, Stat *stat2) {
     switch (tag) {
         case IF:
             return newcmd_if(exp, stat);
@@ -211,7 +211,7 @@ Cmd *newcmd(Cmd_type tag, Exps *exp, Stat *stat, Stat *stat2) {
     }
 }
 
-Cmd *callcmd(Exps *call) {
+Cmd *callcmd(Exp *call) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
 
     cmd->tag = CALLCMD;
@@ -231,7 +231,7 @@ Cmd *statcmd(Stat *stat) {
     return cmd;
 }
 
-Cmd *attcmd(Exps *att) {
+Cmd *attcmd(Exp *att) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
 
     cmd->tag = ATTCMD;
@@ -275,200 +275,120 @@ Cmd *newseqcmd(Cmd *c1, Cmd *c2) {
     return c1;
 }
 
-Exps *unaryexp(Exp_type tag, Exps *e1) {
-    Exps *exp = tryalloc(sizeof(Exps));
+Exp *unaryexp(Exp_type tag, Exp *e1) {
+    Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = tag;
     exp->unary.exp = e1;
-    exp->unary.next = NULL;
 
     return exp;
 }
 
-Exps *binaryexp(Exp_type tag, Exps *e1, Exps *e2) {
-    Exps *exp = tryalloc(sizeof(Exps));
+Exp *binaryexp(Exp_type tag, Exp *e1, Exp *e2) {
+    Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = tag;
     exp->binary.e1 = e1;
     exp->binary.e2 = e2;
-    exp->binary.next = NULL;
 
     return exp;
 }
 
-Exps *asexp(Exps *e1, Type *type) {
-    Exps *exp = tryalloc(sizeof(Exps));
+Exp *asexp(Exp *e1, Type *type) {
+    Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = AS;
     exp->as.type = type;
     exp->as.exp = e1;
-    exp->as.next = NULL;
 
     return exp;
 }
 
-Exps *callexp(char *name, Exps *e1) {
-    Exps *exp = tryalloc(sizeof(Exps));
+Exp *callexp(char *name, Exp_list *e1) {
+    Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = CALLEXP;
     exp->call.name = name;
-    exp->call.listexp = e1;
-    exp->call.next = NULL;
+    exp->call.explist= e1;
 
     return exp;
 }
 
-Exps *newexp(Type *type, Exps *e1) {
-    Exps *exp = tryalloc(sizeof(Exps));
+Exp *newexp(Type *type, Exp *e1) {
+    Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = NEW;
     exp->new.type = type;
     exp->new.exp = e1;
-    exp->new.next = NULL;
 
     return exp;
 }
 
-Exps *newvarid(char *name) {
-    Exps *exp = tryalloc(sizeof(Exps));
+Exp *newvarid(char *name) {
+    Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = VARID;
     exp->var.name = name;
-    exp->var.next = NULL;
 
     return exp;
 }
 
-Exps *listexp(Exps *e1, Exps *e2) {
-    switch(e1->tag) {
-        case VARID:
-            e1->var.next = e2;
-            break;
-        case VAR:
-            e1->binary.next = e2;
-            break;
-        case CALLEXP:
-            e1->call.next = e2;
-            break;
-        case AS:
-            e1->as.next = e2;
-            break;
-        case NEW:
-            e1->new.next = e2;
-            break;
-        case SUM:
-            e1->binary.next = e2;
-            break;
-        case SUB:
-            e1->binary.next = e2;
-            break;
-        case MUL:
-            e1->binary.next = e2;
-            break;
-        case DIV:
-            e1->binary.next = e2;
-            break;
-        case EQ:
-            e1->binary.next = e2;
-            break;
-        case NEQ:
-            e1->binary.next = e2;
-            break;
-        case LEQ:
-            e1->binary.next = e2;
-            break;
-        case GEQ:
-            e1->binary.next = e2;
-            break;
-        case L:
-            e1->binary.next = e2;
-            break;
-        case G:
-            e1->binary.next = e2;
-            break;
-        case NOT:
-            e1->unary.next = e2;
-            break;
-        case AND:
-            e1->binary.next = e2;
-            break;
-        case OR:
-            e1->binary.next = e2;
-            break;
-        case EXPINT:
-            e1->expint.next = e2;
-            break;
-        case EXPFLOAT:
-            e1->expfloat.next = e2;
-            break;
-        case EXPCHAR:
-            e1->expchar.next = e2;
-            break;
-        case EXPSTR:
-            e1->expstr.next = e2;
-            break;
-        case EXPBOOL:
-            e1->expbool.next = e2;
-            break;
-        default:
-            fprintf(stderr, "unknown expression type");
-            exit(-1);
-    }
+Exp_list *listexp(Exp *e1, Exp_list *elist) {
+    Exp_list *ehead;
 
-    return e1;
+    ehead = tryalloc(sizeof(Exp_list));
+    ehead->exp = e1;
+    ehead->next = elist;
+
+    return ehead;
 }
 
-Exps *newint(int i) {
-    Exps *exp = tryalloc(sizeof(Exps));
+Exp *newint(int i) {
+    Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = EXPINT;
     exp->expint.i = i;
     exp->expint.type = newtype(INT);
-    exp->expint.next = NULL;
 
     return exp;
 }
 
-Exps *newfloat(double d) {
-    Exps *exp = tryalloc(sizeof(Exps));
+Exp *newfloat(double d) {
+    Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = EXPFLOAT;
     exp->expfloat.d = d;
     exp->expfloat.type = newtype(FLOAT);
-    exp->expfloat.next = NULL;
 
     return exp;
 }
 
-Exps *newchar(char c) {
-    Exps *exp = tryalloc(sizeof(Exps));
+Exp *newchar(char c) {
+    Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = EXPCHAR;
     exp->expchar.c = c;
     exp->expchar.type = newtype(CHAR);
-    exp->expchar.next = NULL;
 
     return exp;
 }
 
-Exps *newstr(char *s) {
-    Exps *exp = tryalloc(sizeof(Exps));
+Exp *newstr(char *s) {
+    Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = EXPSTR;
     exp->expstr.str = s;
     exp->expstr.type = newseqtype(newtype(CHAR));
-    exp->expstr.next = NULL;
 
     return exp;
 }
 
-Exps *newbool(bool b) {
-    Exps *exp = tryalloc(sizeof(Exps));
+Exp *newbool(bool b) {
+    Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = EXPBOOL;
     exp->expbool.b = b;
     exp->expbool.type = newtype(BOOL);
-    exp->expbool.next = NULL;
 
     return exp;
 }

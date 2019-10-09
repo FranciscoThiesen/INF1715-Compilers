@@ -10,4 +10,5 @@ extern void leave_scope();
 extern void clean_symbols();
 extern Var *get_var(char *id);
 extern Func *get_func(char *id);
+extern Type *get_exp_type(Exp *exp);
 #endif

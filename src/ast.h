@@ -13,7 +13,8 @@ typedef struct func Func;
 typedef struct stat_monga Stat;
 typedef union cmd Cmd;
 typedef union type Type;
-typedef union exps Exps;
+typedef union exp Exp;
+typedef struct exp_list Exp_list;
 typedef union def Def;
 typedef enum native_types Native_types;
 typedef enum def_types Def_types;
@@ -78,73 +79,67 @@ union type {
     } seq;
 };
 
-union exps {
+struct exp_list {
+    Exp *exp;
+    Exp_list *next;
+};
+
+union exp {
     Exp_type tag;
     struct {
         Exp_type tag;
         char *name;
         Var *def;
-        Exps *next;
     } var;
     struct {
         Exp_type tag;
         char *name;
         Func *funcdef;
-        Exps *listexp;
-        Exps *next;
+        Exp_list *explist;
     } call;
     struct {
         Exp_type tag;
-        Exps *exp;
+        Exp *exp;
         Type *type;
-        Exps *next;
     } as;
     struct {
         Exp_type tag;
         Type *type;
-        Exps *exp;
-        Exps *next;
+        Exp *exp;
     } new;
     struct {
         Exp_type tag;
-        Exps *e1;
-        Exps *e2;
-        Exps *next;
+        Exp *e1;
+        Exp *e2;
     } binary;
     struct {
         Exp_type tag;
-        Exps *exp;
-        Exps *next;
+        Exp *exp;
     } unary;
     struct {
         Exp_type tag;
         int i;
         Type *type;
-        Exps *next;
     } expint;
     struct {
         Exp_type tag;
         double d;
         Type *type;
-        Exps *next;
     } expfloat;
     struct {
         Exp_type tag;
         char c;
         Type *type;
-        Exps *next;
     } expchar;
     struct {
         Exp_type tag;
         char *str;
         Type *type;
-        Exps *next;
     } expstr;
     struct {
         Exp_type tag;
         bool b;
         Type *type;
-        Exps *next;
     } expbool;
 };
 
@@ -192,19 +187,19 @@ union cmd {
     enum cmd_type tag;
     struct {
         Cmd_type tag;
-        Exps *exp;
+        Exp *exp;
         Stat *stat;
         Cmd *next;
     } cmd_if;
     struct {
         Cmd_type tag;
-        Exps *exp;
+        Exp *exp;
         Stat *stat;
         Cmd *next;
     } cmd_while;
     struct {
         Cmd_type tag;
-        Exps *exp;
+        Exp *exp;
         Cmd *next;
     } cmd_ret_exp;
     struct {
@@ -213,19 +208,19 @@ union cmd {
     } cmd_ret;
     struct {
         Cmd_type tag;
-        Exps *exp;
+        Exp *exp;
         Stat *stat;
         Stat *stat2;
         Cmd *next;
     } cmd_ifelse;
     struct {
         Cmd_type tag;
-        Exps *exp;
+        Exp *exp;
         Cmd *next;
     } print;
     struct {
         Cmd_type tag;
-        Exps *call;
+        Exp *call;
         Cmd *next;
     } call;
     struct {
@@ -235,7 +230,7 @@ union cmd {
     } stat;
     struct {
         Cmd_type tag;
-        Exps *att;
+        Exp *att;
         Cmd *next;
     } att;
 };
@@ -258,21 +253,21 @@ extern Type *newseqtype(Type *t1);
 extern Var *newparamseq(Var *p1, Var *p2);
 extern Var *newparam(char *name, Type *type);
 extern Stat *newstat(Var *var, Cmd *cmd);
-extern Cmd *newcmd(Cmd_type tag, Exps *exp, Stat *stat, Stat *stat2);
+extern Cmd *newcmd(Cmd_type tag, Exp *exp, Stat *stat, Stat *stat2);
 extern Cmd *newseqcmd(Cmd *c1, Cmd *c2);
-extern Cmd *callcmd(Exps *call);
-extern Cmd *attcmd(Exps *att);
+extern Cmd *callcmd(Exp *call);
+extern Cmd *attcmd(Exp *att);
 extern Cmd *statcmd(Stat *stat);
-extern Exps *unaryexp(Exp_type tag, Exps *e1);
-extern Exps *binaryexp(Exp_type tag, Exps *e1, Exps *e2);
-extern Exps *callexp(char *name, Exps *e1);
-extern Exps *newexp(Type *type, Exps *e1);
-extern Exps *newvarid(char *name);
-extern Exps *listexp(Exps *e1, Exps *e2);
-extern Exps *newint(int i);
-extern Exps *newfloat(double d);
-extern Exps *newchar(char c);
-extern Exps *newstr(char *s);
-extern Exps *newbool(bool b);
-extern Exps *asexp(Exps *e1, Type *type);
+extern Exp *unaryexp(Exp_type tag, Exp *e1);
+extern Exp *binaryexp(Exp_type tag, Exp *e1, Exp *e2);
+extern Exp *callexp(char *name, Exp_list *e1);
+extern Exp *newexp(Type *type, Exp *e1);
+extern Exp *newvarid(char *name);
+extern Exp_list *listexp(Exp *e1, Exp_list *e2);
+extern Exp *newint(int i);
+extern Exp *newfloat(double d);
+extern Exp *newchar(char c);
+extern Exp *newstr(char *s);
+extern Exp *newbool(bool b);
+extern Exp *asexp(Exp *e1, Type *type);
 #endif

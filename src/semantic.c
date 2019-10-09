@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include "semantic.h"
 #include "aux.h"
+#include "ast.h"
 
 #define MAX_SCOPES 40
 
@@ -35,6 +36,104 @@ union unary_def {
 
 static Unary_def *udefs[MAX_SCOPES];
 
+// Inicio das funcoes do sistema de tipos
+
+/*
+static int compare_type(Type *t1, Type *t2) {
+    if(t1->tag != t2->tag) return 0;
+    if(t1->tag == SEQ) return compareType(t1->seq.next, t2->seq.next );
+    return ( t1->single.type == t2->single.type );
+}
+*/
+
+static int is_float(Type *t) {
+    if(t->tag == SINGLE) return (t->single.type == FLOAT);
+    return is_float(t->seq.next);
+}
+
+static int is_int(Type  *t) {
+    if(t->tag == SINGLE) return (t->single.type == INT);
+    return is_int(t->seq.next);
+}
+
+static int is_char(Type *t) {
+    if(t->tag == SINGLE) return (t->single.type == CHAR);
+    return is_char(t->seq.next);
+}
+
+static int is_bool(Type *t) {
+    if(t->tag == SINGLE) return (t->single.type == BOOL);
+    return is_bool(t->seq.next);
+}
+
+static int is_array(Type *t) { return (t->tag == SEQ); }
+
+/*
+Type *get_exp_type(Exp *exp) {
+    if(exp == NULL) {
+        printf("Null expression has no type?!");
+        exit(-1);
+    }
+    
+    // A ideia eh que essa funcao vai ser chamada na printtree, para cada expressao
+    switch(exp->tag) {
+        case VARID:
+            return get_type_varid(exp);
+        case CALLEXP:
+            return get_type_callexp(exp);
+        case AS:
+            return get_type_as(exp);
+        case NEW:
+            return get_type_new(exp);
+        case SUM:
+            return get_type_expsum(exp);
+        case SUB:
+            return get_type_expsub(exp);
+        case MINUS:
+            return get_type_unaryminus(exp);
+        case MUL:
+            return get_type_expmul(exp);
+        case DIV:
+            return get_type_expdiv(exp);
+        case EXPINT:
+            return get_type_expint(exp); // da pra retornar INT de cara?
+        case EXPFLOAT:
+            return get_type_expfloat(exp); // da pra retornar float de cara?
+        case EXPCHAR:
+            return get_type_expchar(exp);
+        case EXPSTR:
+            return get_type_expstr(exp);
+        case EXPBOOL:
+            return get_type_expbool(exp);
+        case EXPATT:
+            return get_type_expatt(exp);
+        case EQ:
+            return get_type_eq(exp);
+        case NEQ:
+            return get_type_neq(exp);
+        case LEQ:
+            return get_type_leq(exp);
+        case GEQ:
+            return get_type_geq(exp);
+        case L:
+            return get_type_less(exp);
+        case G:
+            return get_type_greater(exp);
+        case NOT:
+            return get_type_unarynot(exp);
+        case AND:
+            return get_type_and(exp);
+        case OR:
+            return get_Type_or(exp);
+        default:
+            fprintf(stderr, "Unknown expression %d!\n", exp->tag);
+            exit(-1);
+    }
+    
+}
+*/
+
+
 #define INSERT_DEF(t, p)	\
     udef->t.def = p;		\
     udef->t.next = udefs[current_scope];
@@ -58,7 +157,6 @@ void clean_scope(int scope) {
                 fprintf(stderr, "unknown unary def type in scope array %d\n", udef->tag);
                 exit(-1);
 		}
-
 		free(uaux);
 	}
 
@@ -167,3 +265,5 @@ Func *get_func(char *id) {
 
     return NULL;
 }
+
+

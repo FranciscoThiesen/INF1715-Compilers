@@ -27,7 +27,8 @@ void yyerror(const char *);
 
 %union {
     Type *type;
-    Exps *exp;
+    Exp *exp;
+    Exp_list *elist;
     Stat *stat;
     Cmd *cmd;
     Func *func;
@@ -44,8 +45,9 @@ void yyerror(const char *);
 %type <var> def_var def_vars params param param_tail
 %type <func> def_func
 %type <stat> stat
-%type <exp> exps exp_and exp_comp exp_somasub exp_divmul exp_unary
-            exp_atomic exp_base primitiva exp_tail var exp chamada_func exp_var
+%type <exp> exp exp_and exp_comp exp_somasub exp_divmul exp_unary
+            exp_atomic exp_base primitiva var chamada_func exp_var
+%type <elist> exps exp_tail
 %type <def> defs def programa
 %%
 
