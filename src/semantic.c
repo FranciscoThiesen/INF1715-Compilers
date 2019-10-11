@@ -44,30 +44,30 @@ void clean_scope(int scope) {
     Unary_def *udef;
     Unary_def *uaux;
 
-	udef = udefs[scope];
-	while(udef) {
+    udef = udefs[scope];
+    while(udef) {
         switch(udef->tag) {
             case UVAR:
-				uaux = udef;
-				udef = udef->var.next;
-				break;
+                uaux = udef;
+                udef = udef->var.next;
+                break;
             case UFUNC:
-				uaux = udef;
-				udef = udef->func.next;
-				break;
+                uaux = udef;
+                udef = udef->func.next;
+                break;
             default:
                 fprintf(stderr, "unknown unary def type in scope array %d\n", udef->tag);
                 exit(-1);
-		}
-		free(uaux);
-	}
+        }
+        free(uaux);
+    }
 
 }
 
 void enter_scope() {
     current_scope++;
-	clean_scope(current_scope);
-	udefs[current_scope] = NULL;
+    clean_scope(current_scope);
+    udefs[current_scope] = NULL;
 }
 
 void leave_scope() {
@@ -75,14 +75,14 @@ void leave_scope() {
 }
 
 void init_symbols() {
-	int scope;
+    int scope;
 
-	for (scope = 0; scope < MAX_SCOPES; scope++)
-		udefs[scope] = NULL;
+    for (scope = 0; scope < MAX_SCOPES; scope++)
+        udefs[scope] = NULL;
 }
 
 void clean_symbols() {
-	clean_scope(current_scope);
+    clean_scope(current_scope);
 }
 
 static Unary_def *search_scope(char *id, int scope) {
@@ -146,24 +146,30 @@ void insert_func(Func *f) {
     udefs[current_scope] = udef;
 }
 
-Var *get_var(char *id) {
+Var *get_var(char *id, bool *error) {
     Unary_def *udef;
     int scope;
 
+    *error = false;
     for (scope = current_scope; scope >= 0; scope--)
-        if ((udef = search_scope(id, scope)))
+        if ((udef = search_scope(id, scope)) && udef->tag == UVAR)
             return udef->var.def;
+        else if (udef && udef->tag != UVAR)
+            *error = true;
 
     return NULL;
 }
 
-Func *get_func(char *id) {
+Func *get_func(char *id, bool *error) {
     Unary_def *udef;
     int scope;
 
+    *error = false;
     for (scope = current_scope; scope >= 0; scope--)
-        if ((udef = search_scope(id, scope)))
+        if ((udef = search_scope(id, scope)) && udef->tag == UFUNC)
             return udef->func.def;
+        else if (udef && udef->tag != UFUNC)
+            *error = true;
 
     return NULL;
 }

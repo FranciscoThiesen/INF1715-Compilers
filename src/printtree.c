@@ -46,13 +46,6 @@ static Type *get_exp( Exp *exp );
 
 static void print_stat( Stat *stat );
 
-/*static void print_spaces( int n, int line_skip ) {
-    if( line_skip ) printf("\n");
-    for(int i = 0; i < n; ++i) {
-        printf(" ");
-    }
-}*/
-
 static void print_native_type( Native_types type ) {
     switch( type ) {
         case INT:
@@ -108,7 +101,15 @@ static void print_params( Var* param ) {
 
 static Type *get_expvarid( Exp *exp_var ) {
     Var *v;
-    v = get_var(exp_var->var.name);
+    bool error;
+
+    v = get_var(exp_var->var.name, &error);
+    printf("to aqui %s und %d\n", exp_var->var.name, error);
+    if (error) {
+        fprintf(stderr, "expected symbol %s to be a variable or parameter in line %d\n", exp_var->var.name, global_state->cur_line);
+        exit(-1);
+    }
+
     if (!v) {
         fprintf(stderr, "undefined symbol %s in line %d\n", exp_var->var.name, global_state->cur_line );
         exit(-1);
@@ -124,7 +125,7 @@ static void check_explist( char *name,  Var *param_list, Exp_list *arg_list) {
         else fprintf(stderr, "Too few arguments to function %s in line %d\n", name, global_state->cur_line);
         exit(-1);
     }
-   
+
     Type *t1, *t2;
     t1 = param_list->type;
     t2 = get_exp(arg_list->exp);
@@ -159,16 +160,22 @@ static void check_explist( char *name,  Var *param_list, Exp_list *arg_list) {
         fprintf(stderr, "Incompatible argument type passed to function %s in line %d\n", name, global_state->cur_line);
         exit(-1);
     }
-   
+
     check_explist( name, param_list->next, arg_list->next );
 }
 
 static Type *get_call( Exp *exp ) {
 
     Func *f;
+    bool error;
 
     printf("CALL %s", exp->call.name);
-    f = get_func(exp->call.name);
+    f = get_func(exp->call.name, &error);
+
+    if (error) {
+        fprintf(stderr, "expected symbol %s to be a function in line %d\n", exp->call.name, global_state->cur_line);
+    }
+
     if (!f) {
         fprintf(stderr, "undefined function %s\n", exp->call.name);
         exit(-1);
@@ -248,10 +255,10 @@ static Type *get_expatt( Exp *father, Exp *e1, Exp *e2) {
     //Same type array atribution only valid if left side is new expression
     if (!compare_type(t1, t2)) {
         fprintf(stderr, "assignment with expression with different "
-                        "array type in line %d\n", global_state->cur_line);
+                "array type in line %d\n", global_state->cur_line);
         exit(-1);
     }
-   
+
     return t1;
 }
 
@@ -292,12 +299,17 @@ static Type *get_equality_exp( Exp *father, Exp *e1, Exp *e2 ) {
     Exp *eaux;
     Type *tbool;
 
+    printf("antes 1\n");
     t1 = get_exp( e1 );
+    printf("dps 1\n");
     t2 = get_exp( e2 );
+    printf("dps 2\n");
 
     tbool = newtype(BOOL);
-    if (compare_type(t1, t2))
+    printf("antes do compare bool %p und %p\n", t1, t2);
+    if (compare_type(t1, t2)) {
         return tbool;
+    }
 
     if (is_array(t1) && is_array(t2)) {
         fprintf(stderr, "error: comparing different array types in line %d\n", global_state->cur_line);
@@ -306,7 +318,7 @@ static Type *get_equality_exp( Exp *father, Exp *e1, Exp *e2 ) {
 
     if (is_array(t1) || is_array(t2)) {
         fprintf(stderr, "error: attempt to compare array "
-                        "with non array type in line %d\n", global_state->cur_line);
+                "with non array type in line %d\n", global_state->cur_line);
         exit(-1);
     }
 
@@ -435,7 +447,7 @@ static Type *get_arit_type(Exp *father, Exp *e1, Exp *e2) {
 
     if(is_int(t1)) {
         CAST(father, eaux, binary, e1, t2);
-            return t2;
+        return t2;
     } else {
         CAST(father, eaux, binary, e2, t1)
             return t1;
@@ -468,7 +480,7 @@ static Type *get_minus( Exp *father, Exp *e1 ) {
     Type *t1;
     Exp *eaux;
 
-	global_state->cur_line = father->unary.line;
+    global_state->cur_line = father->unary.line;
     printf("MINUS {\n");
     t1 = get_exp( e1 );
     if ((!is_int(t1) && !is_float(t1) && !is_char(t1)) || is_array(t1)) {
@@ -495,29 +507,29 @@ static Type *get_exp( Exp *exp ) {
                    if( exp->var.next ) puts("");
                    get_exp( exp->var.next );
                    break;
-                 */
+                   */
             case CALLEXP:
                 return get_call( exp );
             case AS:
-				global_state->cur_line = exp->as.line;
+                global_state->cur_line = exp->as.line;
                 return get_as (exp->as.exp, exp->as.type);
             case NEW:
-				global_state->cur_line = exp->new.line;
+                global_state->cur_line = exp->new.line;
                 return get_new( exp->new.type, exp->new.exp );
             case SUM:
-				global_state->cur_line = exp->binary.line;
+                global_state->cur_line = exp->binary.line;
                 return get_arit_type(exp, exp->binary.e1, exp->binary.e2) ;
             case SUB:
-				global_state->cur_line = exp->binary.line;
+                global_state->cur_line = exp->binary.line;
                 return get_arit_type(exp, exp->binary.e1, exp->binary.e2) ;
             case MINUS:
-				global_state->cur_line = exp->binary.line;
+                global_state->cur_line = exp->binary.line;
                 return get_minus(exp, exp->unary.exp );
             case MUL:
-				global_state->cur_line = exp->binary.line;
+                global_state->cur_line = exp->binary.line;
                 return get_arit_type(exp, exp->binary.e1, exp->binary.e2) ;
             case DIV:
-				global_state->cur_line = exp->binary.line;
+                global_state->cur_line = exp->binary.line;
                 return get_arit_type(exp, exp->binary.e1, exp->binary.e2) ;
             case EXPINT:
                 return exp->expint.type;
@@ -530,34 +542,34 @@ static Type *get_exp( Exp *exp ) {
             case EXPBOOL:
                 return exp->expbool.type;
             case EXPATT:
-				global_state->cur_line = exp->binary.line;
+                global_state->cur_line = exp->binary.line;
                 return get_expatt( exp, exp->binary.e1, exp->binary.e2 );
             case EQ:
-				global_state->cur_line = exp->binary.line;
+                global_state->cur_line = exp->binary.line;
                 return get_equality_exp( exp, exp->binary.e1, exp->binary.e2 );
             case NEQ:
-				global_state->cur_line = exp->binary.line;
+                global_state->cur_line = exp->binary.line;
                 return get_equality_exp( exp, exp->binary.e1, exp->binary.e2 );
             case LEQ:
-				global_state->cur_line = exp->binary.line;
+                global_state->cur_line = exp->binary.line;
                 return get_compare_exp( exp, exp->binary.e1, exp->binary.e2 );
             case GEQ:
-				global_state->cur_line = exp->binary.line;
+                global_state->cur_line = exp->binary.line;
                 return get_compare_exp ( exp, exp->binary.e1, exp->binary.e2 );
                 break;
             case L:
-				global_state->cur_line = exp->binary.line;
+                global_state->cur_line = exp->binary.line;
                 return get_compare_exp( exp, exp->binary.e1, exp->binary.e2 );
             case G:
-				global_state->cur_line = exp->binary.line;
+                global_state->cur_line = exp->binary.line;
                 return get_compare_exp( exp, exp->binary.e1, exp->binary.e2 );
             case NOT:
                 return get_not( exp, exp->unary.exp );
             case AND:
-				global_state->cur_line = exp->binary.line;
+                global_state->cur_line = exp->binary.line;
                 return get_bin_logical( exp, exp->binary.e1, exp->binary.e2 );
             case OR:
-				global_state->cur_line = exp->binary.line;
+                global_state->cur_line = exp->binary.line;
                 return get_bin_logical( exp, exp->binary.e1, exp->binary.e2 );
             default:
                 fprintf(stderr, "Unknown expression %d!\n", exp->tag);
@@ -572,7 +584,7 @@ static void print_if( Cmd *father, Exp *exp, Stat *stat ) {
     printf("IF (\n");
     Type *t1;
     Exp *eaux;
-    
+
     t1 = get_exp( exp);
     if( is_array(t1) ) {
         fprintf(stderr, "error: If condition cannot be an array in line %d\n", global_state->cur_line);
@@ -615,6 +627,10 @@ static void get_retexp( Cmd *father, Exp *exp ) {
     char *name;
     name = global_state->cur_func_name;
     t1 = global_state->cur_func_type;
+    if (!t1) {
+        fprintf(stderr, "error: Cannot return expression in function %s with no return type in line %d\n", name, global_state->cur_line);
+        exit(-1);
+    }
     t2 = get_exp( exp );
     if( compare_type(t1, t2)) return;
     // hora do show
@@ -659,7 +675,7 @@ static void get_retexp( Cmd *father, Exp *exp ) {
 static void print_while ( Cmd *father, Exp *exp, Stat *stat ) {
     printf("WHILE (\n");
     Type *t1;
-    
+
     t1 = get_exp(exp);
     // certificar de que esta single bool
     Exp *eaux;
@@ -671,7 +687,7 @@ static void print_while ( Cmd *father, Exp *exp, Stat *stat ) {
     else {
         if( is_numeral(t1) && !is_float(t1) ) {
             Type *tbool;
-            
+
             tbool = newtype(BOOL);
             eaux = asexp( exp, global_state->cur_line, tbool );
             father->cmd_while.exp = eaux;
@@ -696,49 +712,49 @@ static void print_cmd( Cmd *cmd ) {
         return;
     switch ( cmd->tag ) {
         case IF:
-			global_state->cur_line = cmd->cmd_if.line;
+            global_state->cur_line = cmd->cmd_if.line;
             print_if( cmd, cmd->cmd_if.exp, cmd->cmd_if.stat);
             if( cmd->cmd_if.next ) printf("\n");
             print_cmd( cmd->cmd_if.next);
             break;
         case IFELSE:
-			global_state->cur_line = cmd->cmd_ifelse.line;
+            global_state->cur_line = cmd->cmd_ifelse.line;
             print_ifelse( cmd, cmd->cmd_ifelse.exp, cmd->cmd_ifelse.stat, cmd->cmd_ifelse.stat2 );
             if( cmd->cmd_ifelse.next) printf("\n");
             print_cmd( cmd->cmd_ifelse.next );
             break;
         case RET:
-			global_state->cur_line = cmd->cmd_ret.line;
+            global_state->cur_line = cmd->cmd_ret.line;
             print_ret();
             if( cmd->cmd_ret.next) printf("\n");
             print_cmd( cmd->cmd_ret.next );
             break;
         case RETEXP:
-			global_state->cur_line = cmd->cmd_ret_exp.line;
+            global_state->cur_line = cmd->cmd_ret_exp.line;
             get_retexp( cmd, cmd->cmd_ret_exp.exp);
             if( cmd->cmd_ret_exp.next) printf("\n");
             print_cmd( cmd->cmd_ret_exp.next );
             break;
         case WHILE:
-			global_state->cur_line = cmd->cmd_while.line;
+            global_state->cur_line = cmd->cmd_while.line;
             print_while( cmd, cmd->cmd_while.exp, cmd->cmd_while.stat);
             if( cmd->cmd_while.next) printf("\n");
             print_cmd( cmd->cmd_while.next );
             break;
         case PRINT:
-			global_state->cur_line = cmd->print.line;
+            global_state->cur_line = cmd->print.line;
             print_print( cmd->print.exp);
             if( cmd->print.next) printf("\n");
             print_cmd( cmd->print.next );
             break;
         case CALLCMD:
-			global_state->cur_line = cmd->call.line;
+            global_state->cur_line = cmd->call.line;
             get_exp( cmd->call.call );
             if( cmd->call.next ) printf("\n");
             print_cmd( cmd->call.next );
             break;
         case ATTCMD:
-			global_state->cur_line = cmd->att.line;
+            global_state->cur_line = cmd->att.line;
             get_exp( cmd->att.att );
             if( cmd->att.next ) printf("\n");
             print_cmd( cmd->att.next );
