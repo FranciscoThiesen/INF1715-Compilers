@@ -10,8 +10,10 @@
 #include "ast.h"
 #include "printtree.h"
 #include "semantic.h"
+#include "aux.h"
 
 Def *GLOBAL_TREE;
+State *global_state;
 
 static void usage(const char *prog) {
     fprintf(stderr,
@@ -70,6 +72,7 @@ int main(int argc, char *argv[]) {
         exit(-1);
 
     printf("accepted\n");
+    global_state = tryalloc(sizeof(State));
     init_symbols();
     print_tree();
     fclose(fin);
