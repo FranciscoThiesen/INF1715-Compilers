@@ -1,0 +1,12 @@
+#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+
+main() : [int] {
+    # nao deveria funcionar
+    i : int;
+    i = 10;
+    while( i ) {
+        i = i - 1;
+        @i;
+    }
+    return 0;
+}

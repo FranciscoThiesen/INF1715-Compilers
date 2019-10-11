@@ -1,0 +1,16 @@
+#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+
+fib( x : int ) : int { 
+    return x * x;
+}
+
+main() : [int] {
+    # nao deveria funcionar
+    j : float;
+    j = 13.0;
+    @ fib(j);
+    #deveria dar erro aqui
+    x : [int];
+    @ fib(x);
+    return 0;
+}

@@ -1,0 +1,19 @@
+#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+
+main() : [int] {
+    # nao deveria funcionar
+    i : [int];
+    j : [int];
+    if( i == j ) {
+        @x;
+    }
+    if( i ~= j ) {
+        @x;
+    }
+
+    # Isso deveria dar erro!
+    if( i >= j ) {
+        @i;
+    }
+    return 0;
+}

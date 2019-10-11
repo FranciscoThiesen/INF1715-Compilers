@@ -1,0 +1,11 @@
+#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+
+main() : [int] {
+    # nao deveria funcionar
+    i : [int];
+    x : int;
+    if( i ~= x ) {
+        @x;
+    }
+    return 0;
+}
