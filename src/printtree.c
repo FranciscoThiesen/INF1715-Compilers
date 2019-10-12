@@ -198,23 +198,23 @@ static Type *get_as( Exp *exp, Type *type) {
     Type *texp;
 
     texp = get_exp( exp );
-    if (!is_array( texp )) {
+    if (is_array( texp )) {
         fprintf(stderr, "error: cast of array not allowed\n");
         exit(-1);
     }
 
-    if (!is_array( type )) {
+    if (is_array( type )) {
         fprintf(stderr, "error: cast to array not allowed\n");
         exit(-1);
     }
 
     if ((is_bool(texp) && is_float(type))) {
-        fprintf(stderr, "error: cannot cast bool to float");
+        fprintf(stderr, "error: cannot cast bool to float\n");
         exit(-1);
     }
 
     if ((is_float(texp) && is_bool(type))) {
-        fprintf(stderr, "error: cannot cast float to bool");
+        fprintf(stderr, "error: cannot cast float to bool\n");
         exit(-1);
     }
 
@@ -305,7 +305,7 @@ static Type *get_equality_exp( Exp *father, Exp *e1, Exp *e2 ) {
     }
 
     if (is_array(t1) || is_array(t2)) {
-        fprintf(stderr, "error: attempting to compare array"
+        fprintf(stderr, "error: attempt to compare array "
                         "with non array type\n");
         exit(-1);
     }
@@ -551,9 +551,29 @@ static Type *get_exp( Exp *exp ) {
     return NULL;
 }
 
-static void print_if( Exp *exp, Stat *stat ) {
+static void print_if( Cmd *father, Exp *exp, Stat *stat ) {
     printf("IF (\n");
-    get_exp( exp);
+    Type *t1;
+    Exp *eaux;
+    
+    t1 = get_exp( exp);
+    if( is_array(t1) ) {
+        fprintf(stderr, "While condition cannot be an array\n");
+        exit(-1);
+    }
+    else {
+        if( is_numeral(t1) && !is_float(t1) ) {
+            Type *tbool;
+
+            tbool = newtype(BOOL);
+            eaux = asexp( exp, tbool );
+            father->cmd_if.exp = eaux;
+        }
+        else {
+            fprintf(stderr, "While condition cannot be converted to a boolean type\n");
+            exit(-1);
+        }
+    }
     printf(")");
     print_stat( stat );
 }
@@ -564,8 +584,8 @@ static void print_else( Stat *stat ) {
 }
 
 
-static void print_ifelse ( Exp *exp, Stat *stat, Stat *stat2 ) {
-    print_if( exp, stat );
+static void print_ifelse ( Cmd *father, Exp *exp, Stat *stat, Stat *stat2 ) {
+    print_if( father, exp, stat );
     print_else( stat2 );
 }
 
@@ -615,13 +635,35 @@ static void get_retexp( Cmd *father, Exp *exp ) {
     }
 
     printf("RETEXP {\n");
-    get_exp( exp);
+    get_exp(exp);
     printf("}");
 }
 
-static void print_while ( Exp *exp, Stat *stat ) {
+static void print_while ( Cmd *father, Exp *exp, Stat *stat ) {
     printf("WHILE (\n");
-    get_exp( exp);
+    Type *t1;
+    
+    t1 = get_exp(exp);
+    // certificar de que esta single bool
+    Exp *eaux;
+    if( is_array(t1) ) {
+        // nao pode dar certo
+        fprintf(stderr, "While condition cannot be an array" );
+        exit(-1);
+    }
+    else {
+        if( is_numeral(t1) && !is_float(t1) ) {
+            Type *tbool;
+            
+            tbool = newtype(BOOL);
+            eaux = asexp( exp, tbool );
+            father->cmd_while.exp = eaux;
+        }
+        else {
+            fprintf(stderr, "While condition cannot be converted to boolean type\n");
+            exit(-1);
+        }
+    }
     printf(")\n");
     if(stat)     print_stat( stat );
 }
@@ -637,12 +679,12 @@ static void print_cmd( Cmd *cmd ) {
         return;
     switch ( cmd->tag ) {
         case IF:
-            print_if( cmd->cmd_if.exp, cmd->cmd_if.stat);
+            print_if( cmd, cmd->cmd_if.exp, cmd->cmd_if.stat);
             if( cmd->cmd_if.next ) printf("\n");
             print_cmd( cmd->cmd_if.next);
             break;
         case IFELSE:
-            print_ifelse( cmd->cmd_ifelse.exp, cmd->cmd_ifelse.stat, cmd->cmd_ifelse.stat2 );
+            print_ifelse( cmd, cmd->cmd_ifelse.exp, cmd->cmd_ifelse.stat, cmd->cmd_ifelse.stat2 );
             if( cmd->cmd_ifelse.next) printf("\n");
             print_cmd( cmd->cmd_ifelse.next );
             break;
@@ -657,7 +699,7 @@ static void print_cmd( Cmd *cmd ) {
             print_cmd( cmd->cmd_ret_exp.next );
             break;
         case WHILE:
-            print_while( cmd->cmd_while.exp, cmd->cmd_while.stat);
+            print_while( cmd, cmd->cmd_while.exp, cmd->cmd_while.stat);
             if( cmd->cmd_while.next) printf("\n");
             print_cmd( cmd->cmd_while.next );
             break;

@@ -1,7 +1,7 @@
 #Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
 
-main() : [int] {
+main() : int {
     #esperamos um erro aqui
     f : float;
     f = 13.0 as bool;
