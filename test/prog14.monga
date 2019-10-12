@@ -6,16 +6,16 @@ main() : int {
     j : [int];
     x : int;
 
-    if( i == x ) {
+    if( i == j ) {
         @x;
     }
-    if( i ~= x ) {
+    if( i ~= j ) {
         @x;
     }
 
     # Isso deveria dar erro!
-    if( i >= x ) {
-        @i;
+    if( i >= j ) {
+        @x;
     }
     return 0;
 }

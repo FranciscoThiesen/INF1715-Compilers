@@ -104,7 +104,6 @@ static Type *get_expvarid( Exp *exp_var ) {
     bool error;
 
     v = get_var(exp_var->var.name, &error);
-    printf("to aqui %s und %d\n", exp_var->var.name, error);
     if (error) {
         fprintf(stderr, "expected symbol %s to be a variable or parameter in line %d\n", exp_var->var.name, global_state->cur_line);
         exit(-1);
