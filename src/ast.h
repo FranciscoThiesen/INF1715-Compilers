@@ -82,6 +82,7 @@ union type {
 struct exp_list {
     Exp *exp;
     Exp_list *next;
+    int line;
 };
 
 union exp {
@@ -96,25 +97,30 @@ union exp {
         char *name;
         Func *funcdef;
         Exp_list *explist;
+        int line;
     } call;
     struct {
         Exp_type tag;
         Exp *exp;
         Type *type;
+        int line;
     } as;
     struct {
         Exp_type tag;
         Type *type;
         Exp *exp;
+        int line;
     } new;
     struct {
         Exp_type tag;
         Exp *e1;
         Exp *e2;
+        int line;
     } binary;
     struct {
         Exp_type tag;
         Exp *exp;
+        int line;
     } unary;
     struct {
         Exp_type tag;
@@ -190,21 +196,25 @@ union cmd {
         Exp *exp;
         Stat *stat;
         Cmd *next;
+        int line;
     } cmd_if;
     struct {
         Cmd_type tag;
         Exp *exp;
         Stat *stat;
         Cmd *next;
+        int line;
     } cmd_while;
     struct {
         Cmd_type tag;
         Exp *exp;
         Cmd *next;
+        int line;
     } cmd_ret_exp;
     struct {
         Cmd_type tag;
         Cmd *next;
+        int line;
     } cmd_ret;
     struct {
         Cmd_type tag;
@@ -212,16 +222,19 @@ union cmd {
         Stat *stat;
         Stat *stat2;
         Cmd *next;
+        int line;
     } cmd_ifelse;
     struct {
         Cmd_type tag;
         Exp *exp;
         Cmd *next;
+        int line;
     } print;
     struct {
         Cmd_type tag;
         Exp *call;
         Cmd *next;
+        int line;
     } call;
     struct {
         Cmd_type tag;
@@ -232,6 +245,7 @@ union cmd {
         Cmd_type tag;
         Exp *att;
         Cmd *next;
+        int line;
     } att;
 };
 
@@ -253,15 +267,15 @@ extern Type *newseqtype(Type *t1);
 extern Var *newparamseq(Var *p1, Var *p2);
 extern Var *newparam(char *name, Type *type);
 extern Stat *newstat(Var *var, Cmd *cmd);
-extern Cmd *newcmd(Cmd_type tag, Exp *exp, Stat *stat, Stat *stat2);
+extern Cmd *newcmd(Cmd_type tag, int line, Exp *exp, Stat *stat, Stat *stat2);
 extern Cmd *newseqcmd(Cmd *c1, Cmd *c2);
-extern Cmd *callcmd(Exp *call);
-extern Cmd *attcmd(Exp *att);
+extern Cmd *callcmd(Exp *call, int line);
+extern Cmd *attcmd(Exp *att, int line);
 extern Cmd *statcmd(Stat *stat);
-extern Exp *unaryexp(Exp_type tag, Exp *e1);
-extern Exp *binaryexp(Exp_type tag, Exp *e1, Exp *e2);
-extern Exp *callexp(char *name, Exp_list *e1);
-extern Exp *newexp(Type *type, Exp *e1);
+extern Exp *unaryexp(Exp_type tag, int line, Exp *e1);
+extern Exp *binaryexp(Exp_type tag, int line, Exp *e1, Exp *e2);
+extern Exp *callexp(char *name, int line, Exp_list *e1);
+extern Exp *newexp(Type *type, int line, Exp *e1);
 extern Exp *newvarid(char *name);
 extern Exp_list *listexp(Exp *e1, Exp_list *e2);
 extern Exp *newint(int i);
@@ -269,5 +283,5 @@ extern Exp *newfloat(double d);
 extern Exp *newchar(char c);
 extern Exp *newstr(char *s);
 extern Exp *newbool(bool b);
-extern Exp *asexp(Exp *e1, Type *type);
+extern Exp *asexp(Exp *e1, int line, Type *type);
 #endif

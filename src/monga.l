@@ -51,31 +51,67 @@ false                           {
                                     return TK_FALSE;
                                 }
 
-if                              { return TK_IF; }
+if                              { 
+                                    yylval.line = line;
+                                    return TK_IF;
+                                }
 
 else                            { return TK_ELSE; }
 
-while                           { return TK_WHILE; }
+while                           { 
+                                    yylval.line = line;
+                                    return TK_WHILE;
+                                }
 
-return                          { return TK_RET; }
+return                          { 
+                                    yylval.line = line;
+                                    return TK_RET;
+                                }
 
-new                             { return TK_NEW; }
+new                             { 
+                                    yylval.line = line;
+                                    return TK_NEW;
+                                }
 
-as                              { return TK_AS; }
+as                              { 
+                                    yylval.line = line;
+                                    return TK_AS;
+                                }
 
-"@"                             { return TK_PRINT; }
+"@"                             { 
+                                    yylval.line = line;
+                                    return TK_PRINT;
+                                }
 
-"=="                            { return TK_EQUALS; }
+"=="                            {
+                                    yylval.line = line;
+                                    return TK_EQUALS;
+                                }
 
-">="                            { return TK_GEQUALS; }
+">="                            {
+                                    yylval.line = line;
+                                    return TK_GEQUALS;
+                                }
 
-"<="                            { return TK_LEQUALS; }
+"<="                            { 
+                                    yylval.line = line;
+                                    return TK_LEQUALS;
+                                }
 
-"~="                            { return TK_NEQUALS; }
+"~="                            {
+                                    yylval.line = line;
+                                    return TK_NEQUALS;
+                                }
 
-"&&"                            { return TK_AND; }
+"&&"                            {
+                                    yylval.line = line;
+                                    return TK_AND;
+                                }
 
-"||"                            { return TK_OR; }
+"||"                            {
+                                    yylval.line = line;
+                                    return TK_OR;
+                                }
 
 {id}                            {
                                     yylval.str = idcpy();
@@ -117,7 +153,10 @@ as                              { return TK_AS; }
 
 [ \t]+                          {}
 
-.                               { return yytext[0]; }
+.                               { 
+                                    yylval.line = line;
+                                    return yytext[0];
+                                }
 %%
 
 static char handleescape(char escaped) {
