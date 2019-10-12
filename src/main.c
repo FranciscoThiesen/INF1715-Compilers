@@ -76,9 +76,9 @@ int main(int argc, char *argv[]) {
     init_symbols();
     accepted = type_tree();
 	if (accepted)
-		printf("accepted\n");
+		fprintf(stderr, "accepted\n");
 	else
-		printf("rejected\n");
+		fprintf(stderr, "rejected\n");
 
     fclose(fin);
     if (strcmp(outputfile, "\0"))

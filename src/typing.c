@@ -68,39 +68,6 @@ static int is_numeral(Type *t) {
     return ((is_int(t) || is_float(t) || is_char(t)) && !is_array(t));
 }
 
-static void print_native_type( Native_types type ) {
-    switch( type ) {
-        case INT:
-            printf("INT");
-            break;
-        case CHAR:
-            printf("CHAR");
-            break;
-        case FLOAT:
-            printf("FLOAT");
-            break;
-        case BOOL:
-            printf("BOOL");
-            break;
-        default:
-            fprintf(stderr, "unknown type\n");
-            exit(-1);
-    }
-}
-
-static void print_type( Type* type) {
-    if( type != NULL ) {
-        if( type->tag == SINGLE ) {
-            print_native_type( type->single.type );
-        }
-        else {
-            printf("[");
-            print_type( type->seq.next );
-            printf("]");
-        }
-    }
-}
-
 static Type *get_exp( Exp *exp );
 
 static void type_stat( Stat *stat );

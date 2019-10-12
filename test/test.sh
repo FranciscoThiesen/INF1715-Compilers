@@ -7,13 +7,14 @@ PASSED=true
 for FILE in $FILES
 do
     NAME=$(basename $FILE .monga)
-    ../src/mongac -o $NAME.o $FILE 2> $NAME.o
-    if ! diff $NAME.ans $NAME.o
+    ../src/mongac -o $NAME.o $FILE 2> $NAME.e
+    if ! diff $NAME.ans $NAME.e
     then
         echo "tokens found in $FILE differ from answer"
         PASSED=false
     fi
     rm $NAME.o
+    rm $NAME.e
 done
 
 if $PASSED

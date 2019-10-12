@@ -1,2 +1,2 @@
+error: bool cannot be cast to float on foo function call in line 12
 rejected
-ol cannot be cast to float on foo function call in line 12

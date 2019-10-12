@@ -1,6 +1,4 @@
-
-
-rejected
-mpt to compare boolean values in line 8
+error: attempt to compare boolean values in line 8
 error: array index is not an integer in line 9
 error: cannot assign bool to float in line 9
+rejected

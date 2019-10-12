@@ -1,3 +1,3 @@
-rejected
-nnot cast bool to float in line 8
+error: cannot cast bool to float in line 8
 error: cannot assign bool to float in line 8
+rejected
