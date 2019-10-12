@@ -1,12 +1,12 @@
 #Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
-main() : [int] {
+main() : int {
     #vamos testar varios tipos de comparacoes de tipos (int, float, char, bool)
     i : int;
     f : float;
     c : char;
     i = 10;
-    f = 123.5
+    f = 123.5;
     c = 'c';
 
     if( i <= f ) {

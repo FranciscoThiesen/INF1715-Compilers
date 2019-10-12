@@ -140,83 +140,90 @@ Stat *newstat(Var *var, Cmd *cmd) {
     return stat;
 }
 
-static Cmd *newcmd_if(Exp *exp, Stat *stat) {
+static Cmd *newcmd_if(Exp *exp, int line, Stat *stat) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
     cmd->tag = IF;
     cmd->cmd_if.exp = exp;
     cmd->cmd_if.stat = stat;
     cmd->cmd_if.next = NULL;
+	cmd->cmd_if.line = line;
     return cmd;
 }
 
-static Cmd *newcmd_ifelse(Exp *exp, Stat *stat, Stat *stat2) {
+static Cmd *newcmd_ifelse(Exp *exp, int line, Stat *stat, Stat *stat2) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
     cmd->tag = IFELSE;
     cmd->cmd_ifelse.exp = exp;
     cmd->cmd_ifelse.stat = stat;
     cmd->cmd_ifelse.stat2 = stat2;
     cmd->cmd_ifelse.next = NULL;
+    cmd->cmd_ifelse.line = line;
     return cmd;
 }
 
-static Cmd *newcmd_while(Exp *exp, Stat *stat) {
+static Cmd *newcmd_while(Exp *exp, int line, Stat *stat) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
     cmd->tag = WHILE;
     cmd->cmd_while.exp = exp;
     cmd->cmd_while.stat = stat;
     cmd->cmd_while.next = NULL;
+    cmd->cmd_while.line= line;
     return cmd;
 }
 
-static Cmd *newcmd_retexp(Exp *exp) {
+static Cmd *newcmd_retexp(Exp *exp, int line) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
     cmd->tag = RETEXP;
     cmd->cmd_ret_exp.exp = exp;
     cmd->cmd_ret_exp.next = NULL;
+    cmd->cmd_ret_exp.line = line;
     return cmd;
 }
 
-static Cmd *newcmd_ret() {
+static Cmd *newcmd_ret(int line) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
     cmd->tag = RET;
     cmd->cmd_ret.next = NULL;
+    cmd->cmd_ret.line = line;
     return cmd;
 }
 
-static Cmd *newcmd_print(Exp *exp) {
+static Cmd *newcmd_print(Exp *exp, int line) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
     cmd->tag = PRINT;
     cmd->print.exp = exp;
     cmd->print.next = NULL;
+    cmd->print.line = line;
     return cmd;
 }
 
-Cmd *newcmd(Cmd_type tag, Exp *exp, Stat *stat, Stat *stat2) {
+Cmd *newcmd(Cmd_type tag, int line, Exp *exp, Stat *stat, Stat *stat2) {
     switch (tag) {
         case IF:
-            return newcmd_if(exp, stat);
+            return newcmd_if(exp, line, stat);
         case IFELSE:
-            return newcmd_ifelse(exp, stat, stat2);
+            return newcmd_ifelse(exp, line, stat, stat2);
         case WHILE:
-            return newcmd_while(exp, stat);
+            return newcmd_while(exp, line, stat);
         case RETEXP:
-            return newcmd_retexp(exp);
+            return newcmd_retexp(exp, line);
         case RET:
-            return newcmd_ret();
+            return newcmd_ret(line);
         case PRINT:
-            return newcmd_print(exp);
+            return newcmd_print(exp, line);
         default:
             fprintf(stderr, "unknown command type\n");
             exit(-1);
     }
 }
 
-Cmd *callcmd(Exp *call) {
+Cmd *callcmd(Exp *call, int line) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
 
     cmd->tag = CALLCMD;
     cmd->call.call = call;
     cmd->call.next = NULL;
+    cmd->call.line = line;
 
     return cmd;
 }
@@ -231,12 +238,13 @@ Cmd *statcmd(Stat *stat) {
     return cmd;
 }
 
-Cmd *attcmd(Exp *att) {
+Cmd *attcmd(Exp *att, int line) {
     Cmd *cmd = tryalloc(sizeof(Cmd));
 
     cmd->tag = ATTCMD;
     cmd->att.att = att;
     cmd->att.next = NULL;
+	cmd->att.line = line;
 
     return cmd;
 }
@@ -275,51 +283,56 @@ Cmd *newseqcmd(Cmd *c1, Cmd *c2) {
     return c1;
 }
 
-Exp *unaryexp(Exp_type tag, Exp *e1) {
+Exp *unaryexp(Exp_type tag, int line, Exp *e1) {
     Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = tag;
     exp->unary.exp = e1;
+	exp->unary.line = line;
 
     return exp;
 }
 
-Exp *binaryexp(Exp_type tag, Exp *e1, Exp *e2) {
+Exp *binaryexp(Exp_type tag, int line, Exp *e1, Exp *e2) {
     Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = tag;
     exp->binary.e1 = e1;
     exp->binary.e2 = e2;
+	exp->binary.line = line;
 
     return exp;
 }
 
-Exp *asexp(Exp *e1, Type *type) {
+Exp *asexp(Exp *e1, int line, Type *type) {
     Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = AS;
     exp->as.type = type;
     exp->as.exp = e1;
+	exp->as.line = line;
 
     return exp;
 }
 
-Exp *callexp(char *name, Exp_list *e1) {
+Exp *callexp(char *name, int line, Exp_list *e1) {
     Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = CALLEXP;
     exp->call.name = name;
     exp->call.explist= e1;
+    exp->call.line = line;
 
     return exp;
 }
 
-Exp *newexp(Type *type, Exp *e1) {
+Exp *newexp(Type *type, int line, Exp *e1) {
     Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = NEW;
     exp->new.type = type;
     exp->new.exp = e1;
+    exp->new.line = line;
 
     return exp;
 }

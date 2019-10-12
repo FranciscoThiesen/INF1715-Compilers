@@ -1,9 +1,11 @@
 #Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
-main() : [int] {
+main() : int {
     # nao deveria funcionar
     i : [int];
     j : [int];
+    x : int;
+
     if( i == j ) {
         @x;
     }

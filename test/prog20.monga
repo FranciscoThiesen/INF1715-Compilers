@@ -4,13 +4,13 @@ fib( x : int ) : int {
     return x * x;
 }
 
-main() : [int] {
+main() : int {
     # nao deveria funcionar
     j : float;
+    x : [int];
     j = 13.0;
     @ fib(j);
-    #deveria dar erro aqui
-    x : [int];
+    # deveria dar erro aqui
     @ fib(x);
     return 0;
 }
