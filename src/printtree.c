@@ -405,7 +405,7 @@ static Type *get_arit_type(Exp *father, Exp *e1, Exp *e2) {
     if (is_char(t2)) {
         CAST(father, eaux, binary, e2, tint)
     }
-    if ((!is_numeral(t1) && !is_bool(t1)) || (!is_bool(t2) && !is_numeral(t2))) {
+    if ((!is_numeral(t1) && !(is_bool(t1) && !is_array(t1))) || (!(is_bool(t2) && !is_array(t2) ) && !is_numeral(t2))) {
         fprintf(stderr, "error: invalid operand to binary ");
         switch (father->tag) {
             case SUM:
@@ -422,6 +422,26 @@ static Type *get_arit_type(Exp *father, Exp *e1, Exp *e2) {
                 break;
             default:
                 //Never happens
+                break;
+        }
+        exit(-1);
+    }
+    if( (is_bool(t1) && is_float(t2) ) || (is_float(t1) && is_bool(t2) ) ) {
+        fprintf(stderr, "error: incompatible operands to binary ");
+        switch (father->tag) {
+            case SUM:
+                fprintf(stderr, "sum in line %d\n", global_state->cur_line);
+                break;
+            case SUB:
+                fprintf(stderr, "sub in line %d\n", global_state->cur_line);
+                break;
+            case MUL:
+                fprintf(stderr, "mul in line %d\n", global_state->cur_line);
+                break;
+            case DIV:
+                fprintf(stderr, "div in line %d\n", global_state->cur_line);
+                break;
+            default:
                 break;
         }
         exit(-1);
