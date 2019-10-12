@@ -8,8 +8,8 @@
 #include "monga.tab.h"
 #include "lex.yy.h"
 #include "ast.h"
-#include "printtree.h"
-#include "semantic.h"
+#include "typing.h"
+#include "symbols.h"
 #include "aux.h"
 
 Def *GLOBAL_TREE;
@@ -27,6 +27,7 @@ int main(int argc, char *argv[]) {
     int opt;
     FILE *fin;
     FILE *fout;
+	bool accepted;
     const char *optstr = "o:";
     char inputfile[256];
     char outputfile[256];
@@ -71,10 +72,14 @@ int main(int argc, char *argv[]) {
     if (yyparse())
         exit(-1);
 
-    printf("accepted\n");
     global_state = tryalloc(sizeof(State));
     init_symbols();
-    print_tree();
+    accepted = type_tree();
+	if (accepted)
+		printf("accepted\n");
+	else
+		printf("rejected\n");
+
     fclose(fin);
     if (strcmp(outputfile, "\0"))
         fclose(fout);

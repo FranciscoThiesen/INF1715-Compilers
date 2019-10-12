@@ -1,6 +1,11 @@
 #Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
 main() : int {
-    i : int;
-    j : float;
+    i : bool;
+    j : [[float]];
+
+	i = 0;
+	while( i < 3) {
+		j[i][0] = i;
+	}
 }

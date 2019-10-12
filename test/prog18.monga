@@ -4,6 +4,7 @@ main() : int {
     # nao deveria funcionar
     i : char;
     i = '9';
+
     while( i ) {
         i = i - 1.0;
         @i;

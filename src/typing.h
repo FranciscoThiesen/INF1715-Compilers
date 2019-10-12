@@ -11,7 +11,7 @@ struct state {
 	int cur_line;
 };
 
-extern void print_tree();
+extern bool type_tree();
 extern State * global_state;
 
 #endif

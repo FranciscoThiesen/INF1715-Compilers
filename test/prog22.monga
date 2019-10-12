@@ -4,6 +4,7 @@
 main() : int {
     #esperamos um erro aqui
     f : float;
+
     f = true as float;
     return 0;
 }

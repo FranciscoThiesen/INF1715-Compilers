@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "semantic.h"
+#include "symbols.h"
 #include "aux.h"
 #include "ast.h"
 

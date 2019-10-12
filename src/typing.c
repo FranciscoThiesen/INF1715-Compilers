@@ -1,50 +1,72 @@
 //Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
 #include "ast.h"
-#include "semantic.h"
-#include "printtree.h"
+#include "symbols.h"
+#include "typing.h"
 #include <stdio.h>
+#include <stdbool.h>
 #define TABSTOP 4
 
 #define CAST(father, ecast, exptype, eorig, type)   \
     ecast = asexp(eorig, global_state->cur_line, type);     \
     father->exptype.eorig = ecast;
 
+static bool accepted = true;
+
 static int compare_type(Type *t1, Type *t2) {
+	if (t1 == NULL || t2 == NULL)
+		return 0;
+
     if(t1->tag != t2->tag) return 0;
     if(t1->tag == SEQ) return compare_type(t1->seq.next, t2->seq.next );
     return ( t1->single.type == t2->single.type );
 }
 
 static int is_float(Type *t) {
+	if (t == NULL)
+		return 0;
+
     if(t->tag == SINGLE) return (t->single.type == FLOAT);
     return is_float(t->seq.next);
 }
 
 static int is_int(Type  *t) {
+	if (t == NULL)
+		return 0;
+
     if(t->tag == SINGLE) return (t->single.type == INT);
     return is_int(t->seq.next);
 }
 
 static int is_char(Type *t) {
+	if (t == NULL)
+		return 0;
+
     if(t->tag == SINGLE) return (t->single.type == CHAR);
     return is_char(t->seq.next);
 }
 
 static int is_bool(Type *t) {
+	if (t == NULL)
+		return 0;
+
     if(t->tag == SINGLE) return (t->single.type == BOOL);
     return is_bool(t->seq.next);
 }
 
-static int is_array(Type *t) { return (t->tag == SEQ); }
+static int is_array(Type *t) { 
+	if (t == NULL)
+		return 0;
 
-static int is_numeral(Type *t) {
-    return ((is_int(t) || is_float(t) || is_char(t)) && !is_array(t));
+	return (t->tag == SEQ);
 }
 
-static Type *get_exp( Exp *exp );
+static int is_numeral(Type *t) {
+	if (t == NULL)
+		return 0;
 
-static void print_stat( Stat *stat );
+    return ((is_int(t) || is_float(t) || is_char(t)) && !is_array(t));
+}
 
 static void print_native_type( Native_types type ) {
     switch( type ) {
@@ -79,24 +101,21 @@ static void print_type( Type* type) {
     }
 }
 
-static void print_var( Var *v ) {
+static Type *get_exp( Exp *exp );
+
+static void type_stat( Stat *stat );
+
+static void type_var( Var *v ) {
     if( v != NULL ) {
         insert_var(v);
-        print_type( v->type );
-        printf(" %s\n", v->name );
-        print_var( v->next );
+        type_var( v->next );
     }
 }
-
-static void print_params( Var* param ) {
+static void type_params( Var* param ) {
     if( param == NULL ) return;
     insert_var(param);
-    printf("%s ", param->name );
-    print_type( param->type );
-    if( param->next != NULL ) {
-        printf(", ");
-        print_params( param->next );
-    }
+    if( param->next != NULL )
+        type_params( param->next );
 }
 
 static Type *get_expvarid( Exp *exp_var ) {
@@ -105,24 +124,38 @@ static Type *get_expvarid( Exp *exp_var ) {
 
     v = get_var(exp_var->var.name, &error);
     if (error) {
-        fprintf(stderr, "expected symbol %s to be a variable or parameter in line %d\n", exp_var->var.name, global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: expected symbol %s to be a variable or parameter in"
+                " line %d\n", exp_var->var.name, global_state->cur_line);
+
+        accepted = false;
+		return NULL;
     }
 
     if (!v) {
-        fprintf(stderr, "undefined symbol %s in line %d\n", exp_var->var.name, global_state->cur_line );
-        exit(-1);
+        fprintf(stderr, "error: undefined symbol %s in line %d\n", exp_var->var.name,
+                global_state->cur_line );
+
+        accepted = false;
+		return NULL;
     }
 
-    return v->type;
+	return v->type;
 }
 
 static void check_explist( char *name,  Var *param_list, Exp_list *arg_list) {
     if( param_list == NULL && arg_list == NULL) return;
     if( param_list == NULL || arg_list == NULL) {
-        if( param_list == NULL ) fprintf(stderr, "Too many arguments to function %s in line %d\n", name, global_state->cur_line);
-        else fprintf(stderr, "Too few arguments to function %s in line %d\n", name, global_state->cur_line);
-        exit(-1);
+        if( param_list == NULL ) {
+            fprintf(stderr, "error: too many arguments to function %s in line %d\n",
+                    name, global_state->cur_line);
+			return ;
+		} else {
+            fprintf(stderr, "error: too few arguments to function %s in line %d\n",
+                    name, global_state->cur_line);
+			return ;
+		}
+        //exit(-1);
+        accepted = false;
     }
 
     Type *t1, *t2;
@@ -137,8 +170,10 @@ static void check_explist( char *name,  Var *param_list, Exp_list *arg_list) {
     }
     else if( (is_bool(t1) && !is_array(t1)) && is_numeral(t2) ) {
         if( is_float(t2) ) {
-            fprintf(stderr, "Float cannot be cast down to bool on %s function in line %d\n", name, global_state->cur_line);
-            exit(-1);
+            fprintf(stderr, "error: float cannot be cast down to bool on %s function"
+							" in line %d\n", name, global_state->cur_line);
+            //exit(-1);
+            accepted = false;
         }
         else {
             eaux = asexp( arg_list->exp, global_state->cur_line, t1 );
@@ -147,8 +182,10 @@ static void check_explist( char *name,  Var *param_list, Exp_list *arg_list) {
     }
     else if( is_numeral(t1) && (is_bool(t2) && !is_array(t2) ) ) {
         if( is_float(t1) ) {
-            fprintf(stderr, "Bool cannot be cast to float on %s function call in line %d\n", name, global_state->cur_line);
-            exit(-1);
+            fprintf(stderr, "error: bool cannot be cast to float on %s function call"
+							" in line %d\n", name, global_state->cur_line);
+            //exit(-1);
+            accepted = false;
         }
         else {
             eaux = asexp( arg_list->exp, global_state->cur_line, t1);
@@ -156,8 +193,10 @@ static void check_explist( char *name,  Var *param_list, Exp_list *arg_list) {
         }
     }
     else if( !compare_type(t1, t2) ) {
-        fprintf(stderr, "Incompatible argument type passed to function %s in line %d\n", name, global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: incompatible argument type passed to function"
+						" %s in line %d\n", name, global_state->cur_line);
+        //exit(-1);
+        accepted = false;
     }
 
     check_explist( name, param_list->next, arg_list->next );
@@ -168,22 +207,26 @@ static Type *get_call( Exp *exp ) {
     Func *f;
     bool error;
 
-    printf("CALL %s", exp->call.name);
     f = get_func(exp->call.name, &error);
 
     if (error) {
-        fprintf(stderr, "expected symbol %s to be a function in line %d\n", exp->call.name, global_state->cur_line);
-    }
+        fprintf(stderr, "error: expected symbol %s to be a function"
+						" in line %d\n", exp->call.name, global_state->cur_line);
+		//exit(-1);
+		accepted = false;
+
+		return NULL;
+	}
 
     if (!f) {
-        fprintf(stderr, "undefined function %s\n", exp->call.name);
-        exit(-1);
+        fprintf(stderr, "error: undefined function %s\n", exp->call.name);
+        accepted = false;
+
+		return NULL;
     }
 
     exp->call.funcdef = f;
-    printf("ARGS {\n");
     check_explist( exp->call.name, f->param, exp->call.explist );
-    printf("}\n");
 
     return f->type;
 }
@@ -193,8 +236,10 @@ static Type *get_new( Type *type, Exp *exp) {
 
     texp = get_exp( exp );
     if (!is_int(texp)) {
-        fprintf(stderr, "expression inside new must be an integer in line %d\n", global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: expression inside new must be an integer in line %d\n",
+							global_state->cur_line);
+        //exit(-1);
+        accepted = false;
     }
 
     return type;
@@ -205,23 +250,35 @@ static Type *get_as( Exp *exp, Type *type) {
 
     texp = get_exp( exp );
     if (is_array( texp )) {
-        fprintf(stderr, "error: cast of array not allowed in line %d\n", global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: cast of array not allowed in line %d\n",
+					global_state->cur_line);
+        //exit(-1);
+        accepted = false;
+		return texp;
     }
 
     if (is_array( type )) {
-        fprintf(stderr, "error: cast to array not allowed in line %d\n", global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: cast to array not allowed in line %d\n",
+					global_state->cur_line);
+        //exit(-1);
+        accepted = false;
+		return type;
     }
 
     if ((is_bool(texp) && is_float(type))) {
-        fprintf(stderr, "error: cannot cast bool to float in line %d\n", global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: cannot cast bool to float in line %d\n",
+					global_state->cur_line);
+        //exit(-1);
+        accepted = false;
+		return texp;
     }
 
     if ((is_float(texp) && is_bool(type))) {
-        fprintf(stderr, "error: cannot cast float to bool in line %d\n", global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: cannot cast float to bool in line %d\n",
+					global_state->cur_line);
+		return texp;
+        //exit(-1);
+        accepted = false;
     }
 
     return type;
@@ -240,12 +297,16 @@ static Type *get_expatt( Exp *father, Exp *e1, Exp *e2) {
         }
 
         if ((is_bool(t1) && is_float(t2))) {
-            fprintf(stderr, "error: cannot assign float to bool in line %d\n", global_state->cur_line);
-            exit(-1);
+            fprintf(stderr, "error: cannot assign float to bool in line %d\n",
+						global_state->cur_line);
+            //exit(-1);
+            accepted = false;
         }
         if ((is_float(t1) && is_bool(t2))) {
-            fprintf(stderr, "error: cannot assign bool to float in line %d\n", global_state->cur_line);
-            exit(-1);
+            fprintf(stderr, "error: cannot assign bool to float in line %d\n",
+						global_state->cur_line);
+            //exit(-1);
+            accepted = false;
         }
         CAST(father, eaux, binary, e2, t1);
         return t1;
@@ -253,9 +314,10 @@ static Type *get_expatt( Exp *father, Exp *e1, Exp *e2) {
 
     //Same type array atribution only valid if left side is new expression
     if (!compare_type(t1, t2)) {
-        fprintf(stderr, "assignment with expression with different "
+        fprintf(stderr, "error: assignment with expression with different "
                 "array type in line %d\n", global_state->cur_line);
-        exit(-1);
+        //exit(-1);
+        accepted = false;
     }
 
     return t1;
@@ -270,6 +332,21 @@ static Type *get_bin_logical( Exp *father, Exp *e1, Exp *e2 ) {
     t2 = get_exp( e2 );
 
     tbool = newtype(BOOL);
+	if (is_float(t1) || is_float(t2) || is_array(t1) || is_array(t2)) {
+		fprintf(stderr, "error: invalid operand in logical");
+		switch (father->tag) {
+			case OR:
+				fprintf(stderr, " OR operation in line %d\n", global_state->cur_line);
+				break;
+			case AND:
+				fprintf(stderr, " AND operation in line %d\n", global_state->cur_line);
+				break;
+			default:
+				break;
+		}
+		accepted = false;
+		return NULL;
+	}
     if (!is_bool(t1) || is_array(t1)) {
         CAST(father, eaux, binary, e1, tbool);
     }
@@ -298,32 +375,33 @@ static Type *get_equality_exp( Exp *father, Exp *e1, Exp *e2 ) {
     Exp *eaux;
     Type *tbool;
 
-    printf("antes 1\n");
     t1 = get_exp( e1 );
-    printf("dps 1\n");
     t2 = get_exp( e2 );
-    printf("dps 2\n");
 
     tbool = newtype(BOOL);
-    printf("antes do compare bool %p und %p\n", t1, t2);
     if (compare_type(t1, t2)) {
         return tbool;
     }
 
     if (is_array(t1) && is_array(t2)) {
-        fprintf(stderr, "error: comparing different array types in line %d\n", global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: comparing different array types in line %d\n",
+					global_state->cur_line);
+        //exit(-1);
+        accepted = false;
     }
 
     if (is_array(t1) || is_array(t2)) {
         fprintf(stderr, "error: attempt to compare array "
                 "with non array type in line %d\n", global_state->cur_line);
-        exit(-1);
+        //exit(-1);
+        accepted = false;
     }
 
     if ((is_float(t1) && is_bool(t2)) || (is_bool(t1) && is_float(t2))) {
-        fprintf(stderr, "error: attempting to compare float with bool in line %d\n", global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: attempting to compare float with bool" 
+						" in line %d\n", global_state->cur_line);
+        //exit(-1);
+        accepted = false;
     }
 
     if (is_float(t1) && (is_numeral(t2) || is_bool(t2)))  {
@@ -369,13 +447,17 @@ static Type *get_compare_exp( Exp *father, Exp *e1, Exp *e2 ) {
 
     tbool = newtype(BOOL);
     if (is_array(t1) || is_array(t2)) {
-        fprintf(stderr, "error: attempt to compare array values in line %d\n", global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: attempt to compare array values in line %d\n",
+					global_state->cur_line);
+        //exit(-1);
+        accepted = false;
     }
 
     if (is_bool(t1) || is_bool(t2)) {
-        fprintf(stderr, "error: attempt to compare boolean values in line %d\n", global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: attempt to compare boolean values in line %d\n",
+					global_state->cur_line);
+        //exit(-1);
+        accepted = false;
     }
 
     if (is_float(t1) && (is_numeral(t2) || is_bool(t2)))  {
@@ -435,13 +517,13 @@ static Type *get_arit_type(Exp *father, Exp *e1, Exp *e2) {
                 //Never happens
                 break;
         }
-        exit(-1);
+        //exit(-1);
+        accepted = false;
     }
     if( compare_type(t1, t2) ) return t1;
 
     // (int, int) -> int, (float, float) -> float   
     // cast t1 to float
-    printf("}");
 
     if(is_int(t1)) {
         CAST(father, eaux, binary, e1, t2)
@@ -456,21 +538,23 @@ static Type *get_arit_type(Exp *father, Exp *e1, Exp *e2) {
 static Type *get_expvar( Exp *e1, Exp *e2) {
     Type *t1, *t2;
 
-    printf("NOTSOSIMPLEVAR {\n");
     t1 = get_exp( e1 );
     if (!is_array( t1 )) {
-        fprintf(stderr, "error: subscripted value is not an array in line %d\n", global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: subscripted value is not an array in line %d\n",
+					global_state->cur_line);
+        //exit(-1);
+        accepted = false;
     }
 
     puts("");
     t2 = get_exp( e2 );
     if (!is_int( t2 ) || is_array(t2)) {
-        fprintf(stderr, "error: array index is not an integer in line %d\n", global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: array index is not an integer in line %d\n",
+					global_state->cur_line);
+        //exit(-1);
+        accepted = false;
     }
 
-    printf("}");
     return t1->seq.next;
 }
 
@@ -479,11 +563,12 @@ static Type *get_minus( Exp *father, Exp *e1 ) {
     Exp *eaux;
 
     global_state->cur_line = father->unary.line;
-    printf("MINUS {\n");
     t1 = get_exp( e1 );
     if ((!is_int(t1) && !is_float(t1) && !is_char(t1)) || is_array(t1)) {
-        fprintf(stderr, "error: wrong type argument to unary minus in line %d\n", global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: wrong type argument to unary minus"
+					" in line %d\n", global_state->cur_line);
+        //exit(-1);
+        accepted = false;
     }
 
     if (is_char(t1)) {
@@ -571,22 +656,24 @@ static Type *get_exp( Exp *exp ) {
                 return get_bin_logical( exp, exp->binary.e1, exp->binary.e2 );
             default:
                 fprintf(stderr, "Unknown expression %d!\n", exp->tag);
-                exit(-1);
+                //exit(-1);
+                accepted = false;
         }
     }
 
     return NULL;
 }
 
-static void print_if( Cmd *father, Exp *exp, Stat *stat ) {
-    printf("IF (\n");
+static void type_if( Cmd *father, Exp *exp, Stat *stat ) {
     Type *t1;
     Exp *eaux;
 
     t1 = get_exp( exp);
     if( is_array(t1) ) {
-        fprintf(stderr, "error: If condition cannot be an array in line %d\n", global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: if condition cannot be an array in line %d\n",
+                    global_state->cur_line);
+        //exit(-1);
+        accepted = false;
     }
     else {
         if( is_numeral(t1) && !is_float(t1) ) {
@@ -597,27 +684,26 @@ static void print_if( Cmd *father, Exp *exp, Stat *stat ) {
             father->cmd_if.exp = eaux;
         }
         else if( !is_bool(t1) ){
-            fprintf(stderr, "error: If condition cannot be converted to a boolean type in line %d\n", global_state->cur_line);
-            exit(-1);
+            fprintf(stderr, "error: if condition cannot be converted to"
+                        " a boolean type in line %d\n", global_state->cur_line);
+            //exit(-1);
+            accepted = false;
         }
     }
-    printf(")");
-    print_stat( stat );
+    type_stat( stat );
 }
 
-static void print_else( Stat *stat ) {
-    printf(" ELSE\n");
-    if (stat)     print_stat( stat );
+static void type_else( Stat *stat ) {
+    if (stat)     type_stat( stat );
 }
 
 
-static void print_ifelse ( Cmd *father, Exp *exp, Stat *stat, Stat *stat2 ) {
-    print_if( father, exp, stat );
-    print_else( stat2 );
+static void type_ifelse ( Cmd *father, Exp *exp, Stat *stat, Stat *stat2 ) {
+    type_if( father, exp, stat );
+    type_else( stat2 );
 }
 
-static void print_ret () {
-    printf("RET\n");
+static void type_ret () {
 }
 
 static void get_retexp( Cmd *father, Exp *exp ) {
@@ -626,8 +712,10 @@ static void get_retexp( Cmd *father, Exp *exp ) {
     name = global_state->cur_func_name;
     t1 = global_state->cur_func_type;
     if (!t1) {
-        fprintf(stderr, "error: Cannot return expression in function %s with no return type in line %d\n", name, global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: cannot return expression in function %s with"
+                " no return type in line %d\n", name, global_state->cur_line);
+        //exit(-1);
+        accepted = false;
     }
     t2 = get_exp( exp );
     if( compare_type(t1, t2)) return;
@@ -642,8 +730,10 @@ static void get_retexp( Cmd *father, Exp *exp ) {
     }
     else if( (is_bool(t1) && !is_array(t1)) && is_numeral(t2) ) {
         if( is_float(t2) ) {
-            fprintf(stderr, "Float is not compatible with %s return type in line %d\n", name, global_state->cur_line );
-            exit(-1);
+            fprintf(stderr, "error: float is not compatible with %s return type"
+                    " in line %d\n", name, global_state->cur_line );
+            //exit(-1);
+            accepted = false;
         }
         else {
             eaux = asexp( exp, global_state->cur_line, t1 );
@@ -652,8 +742,10 @@ static void get_retexp( Cmd *father, Exp *exp ) {
     }
     else if( is_numeral(t1) && (is_bool(t2) && !is_array(t2) ) ) {
         if( is_float(t1) ) {
-            fprintf(stderr, "Bool is not compatible with %s return type in line %d\n", name, global_state->cur_line);
-            exit(-1);
+            fprintf(stderr, "error: bool is not compatible with %s return type"
+                    " in line %d\n", name, global_state->cur_line);
+            //exit(-1);
+            accepted = false;
         }
         else {
             eaux = asexp( exp, global_state->cur_line, t1);
@@ -661,17 +753,15 @@ static void get_retexp( Cmd *father, Exp *exp ) {
         }
     }
     else if( !compare_type(t1, t2) ) {
-        fprintf(stderr, "Wrong return type for function %s in line %d\n", name, global_state->cur_line);
-        exit(-1);
+        fprintf(stderr, "error: wrong return type for function %s in line %d\n",
+                name, global_state->cur_line);
+        //exit(-1);
+        accepted = false;
     }
 
-    printf("RETEXP {\n");
-    get_exp(exp);
-    printf("}");
 }
 
-static void print_while ( Cmd *father, Exp *exp, Stat *stat ) {
-    printf("WHILE (\n");
+static void type_while ( Cmd *father, Exp *exp, Stat *stat ) {
     Type *t1;
 
     t1 = get_exp(exp);
@@ -679,8 +769,10 @@ static void print_while ( Cmd *father, Exp *exp, Stat *stat ) {
     Exp *eaux;
     if( is_array(t1) ) {
         // nao pode dar certo
-        fprintf(stderr, "While condition cannot be an array in line: %d\n", global_state->cur_line );
-        exit(-1);
+        fprintf(stderr, "error: while condition cannot be an array in line: %d\n",
+                global_state->cur_line );
+        //exit(-1);
+        accepted = false;
     }
     else {
         if( is_numeral(t1) && !is_float(t1) ) {
@@ -691,134 +783,119 @@ static void print_while ( Cmd *father, Exp *exp, Stat *stat ) {
             father->cmd_while.exp = eaux;
         }
         else if( !is_bool(t1) ){
-            fprintf(stderr, "While condition cannot be converted to boolean type in line %d\n", global_state->cur_line );
-            exit(-1);
+            fprintf(stderr, "error: while condition cannot be converted to boolean"
+                    " type in line %d\n", global_state->cur_line );
+            //exit(-1);
+            accepted = false;
         }
     }
-    printf(")\n");
-    if(stat)     print_stat( stat );
+    if(stat)     type_stat( stat );
 }
 
-static void print_print( Exp *exp ) {
-    printf("PRINT {\n");
+static void type_print( Exp *exp ) {
     get_exp( exp);
-    printf("}");
 }
 
-static void print_cmd( Cmd *cmd ) {
+static void type_cmd( Cmd *cmd ) {
     if (!cmd)
         return;
     switch ( cmd->tag ) {
         case IF:
             global_state->cur_line = cmd->cmd_if.line;
-            print_if( cmd, cmd->cmd_if.exp, cmd->cmd_if.stat);
-            if( cmd->cmd_if.next ) printf("\n");
-            print_cmd( cmd->cmd_if.next);
+            type_if( cmd, cmd->cmd_if.exp, cmd->cmd_if.stat);
+            type_cmd( cmd->cmd_if.next);
             break;
         case IFELSE:
             global_state->cur_line = cmd->cmd_ifelse.line;
-            print_ifelse( cmd, cmd->cmd_ifelse.exp, cmd->cmd_ifelse.stat, cmd->cmd_ifelse.stat2 );
-            if( cmd->cmd_ifelse.next) printf("\n");
-            print_cmd( cmd->cmd_ifelse.next );
+            type_ifelse( cmd, cmd->cmd_ifelse.exp, cmd->cmd_ifelse.stat,
+                            cmd->cmd_ifelse.stat2 );
+            type_cmd( cmd->cmd_ifelse.next );
             break;
         case RET:
             global_state->cur_line = cmd->cmd_ret.line;
-            print_ret();
-            if( cmd->cmd_ret.next) printf("\n");
-            print_cmd( cmd->cmd_ret.next );
+            type_ret();
+            type_cmd( cmd->cmd_ret.next );
             break;
         case RETEXP:
             global_state->cur_line = cmd->cmd_ret_exp.line;
             get_retexp( cmd, cmd->cmd_ret_exp.exp);
-            if( cmd->cmd_ret_exp.next) printf("\n");
-            print_cmd( cmd->cmd_ret_exp.next );
+            type_cmd( cmd->cmd_ret_exp.next );
             break;
         case WHILE:
             global_state->cur_line = cmd->cmd_while.line;
-            print_while( cmd, cmd->cmd_while.exp, cmd->cmd_while.stat);
-            if( cmd->cmd_while.next) printf("\n");
-            print_cmd( cmd->cmd_while.next );
+            type_while( cmd, cmd->cmd_while.exp, cmd->cmd_while.stat);
+            type_cmd( cmd->cmd_while.next );
             break;
         case PRINT:
             global_state->cur_line = cmd->print.line;
-            print_print( cmd->print.exp);
-            if( cmd->print.next) printf("\n");
-            print_cmd( cmd->print.next );
+            type_print( cmd->print.exp);
+            type_cmd( cmd->print.next );
             break;
         case CALLCMD:
             global_state->cur_line = cmd->call.line;
             get_exp( cmd->call.call );
-            if( cmd->call.next ) printf("\n");
-            print_cmd( cmd->call.next );
+            type_cmd( cmd->call.next );
             break;
         case ATTCMD:
             global_state->cur_line = cmd->att.line;
             get_exp( cmd->att.att );
-            if( cmd->att.next ) printf("\n");
-            print_cmd( cmd->att.next );
+            type_cmd( cmd->att.next );
             break;
         case STAT:
-            print_cmd( cmd->stat.next);
+            type_cmd( cmd->stat.next);
             break;
         default:
             fprintf(stderr, "Unknown command!\n");
-            exit(-1);
+            //exit(-1);
+            accepted = false;
     }
 }
 
-static void print_stat( Stat *stat ) {
+static void type_stat( Stat *stat ) {
     if (!stat) {
         return;
     }
 
     enter_scope();
-    printf("{\n");
-    print_var( stat->vars);
-    print_cmd( stat->cmds);
-    printf("}");
+    type_var( stat->vars);
+    type_cmd( stat->cmds);
     leave_scope();
 }
 
-static void print_func( Func* f ) {
+static void type_func( Func* f ) {
     if( f != NULL ) {
         insert_func(f);
         global_state->cur_func_type = f->type; 
         global_state->cur_func_name = f->name;
-        printf("FUNC< ");
-        print_type( f->type );
-        printf(" > ");
-        printf(" %s, ", f->name );
         enter_scope();
-        printf("PARAMS = {");
-        print_params( f->param );
-        printf("}\n");
-        if( f->stat ) {
-            print_stat( f->stat );
-        }
+        type_params( f->param );
+        if( f->stat )
+            type_stat( f->stat );
+
         leave_scope();
-        if( f->next ) {
-            print_func( f->next );
-        }
+        if( f->next )
+            type_func( f->next );
     }
 }
 
-void print_defs(Def *def) {
+void type_defs(Def *def) {
     if (!def) {
         return;
     }
 
     switch (def->tag) {
         case DEFVAR:
-            print_var( def->vars.vars );
-            print_defs( def->vars.next );
+            type_var( def->vars.vars );
+            type_defs( def->vars.next );
             break;
         case DEFFUNC:
-            print_func( def->funcs.funcs );
-            print_defs( def->funcs.next );
+            type_func( def->funcs.funcs );
+            type_defs( def->funcs.next );
             break;
     }
 }
 
-void print_tree() {
-    print_defs(GLOBAL_TREE);
+bool  type_tree() {
+    type_defs(GLOBAL_TREE);
+	return accepted;
 }

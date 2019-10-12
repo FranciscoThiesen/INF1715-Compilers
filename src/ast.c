@@ -330,7 +330,7 @@ Exp *newexp(Type *type, int line, Exp *e1) {
     Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = NEW;
-    exp->new.type = type;
+    exp->new.type = newseqtype(type);
     exp->new.exp = e1;
     exp->new.line = line;
 

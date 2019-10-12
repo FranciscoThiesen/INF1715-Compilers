@@ -1,4 +1,4 @@
-#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+# Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
 random() : int { return 13; }
 
@@ -6,6 +6,7 @@ wow( useless : int ) : int
 {
     x : int;
     x = random(); 
+
     return random ~= 13;
 }
 
@@ -14,6 +15,7 @@ main() : int
     memo : [int];
     i : int;
     i = 0;
+
     while ( i < 0xff ) 
     {
         memo[i] = i * 42 + wow();  

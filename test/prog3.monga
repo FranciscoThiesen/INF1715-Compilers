@@ -1,8 +1,8 @@
 #Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
 main() : int {
-    c : char;
+    i : [int];
 
-    c = "fdafda\fdafda";
+	i = new int[20];
     return 0;
 }
