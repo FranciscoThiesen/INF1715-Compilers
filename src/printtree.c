@@ -46,12 +46,12 @@ static Type *get_exp( Exp *exp );
 
 static void print_stat( Stat *stat );
 
-static void print_spaces( int n, int line_skip ) {
+/*static void print_spaces( int n, int line_skip ) {
     if( line_skip ) printf("\n");
     for(int i = 0; i < n; ++i) {
         printf(" ");
     }
-}
+}*/
 
 static void print_native_type( Native_types type ) {
     switch( type ) {
@@ -110,7 +110,7 @@ static Type *get_expvarid( Exp *exp_var ) {
     Var *v;
     v = get_var(exp_var->var.name);
     if (!v) {
-        fprintf(stderr, "undefined symbol %s\n", exp_var->var.name);
+        fprintf(stderr, "undefined symbol %s in line %d\n", exp_var->var.name, global_state->cur_line );
         exit(-1);
     }
 
@@ -187,7 +187,7 @@ static Type *get_new( Type *type, Exp *exp) {
 
     texp = get_exp( exp );
     if (!is_int(texp)) {
-        fprintf(stderr, "expression in new must be an integer\n");
+        fprintf(stderr, "expression inside new must be an integer in line %d\n", global_state->cur_line);
         exit(-1);
     }
 
@@ -238,7 +238,7 @@ static Type *get_expatt( Exp *father, Exp *e1, Exp *e2) {
             exit(-1);
         }
         if ((is_float(t1) && is_bool(t2))) {
-            fprintf(stderr, "error: cannot assign bool to float %d\n", global_state->cur_line);
+            fprintf(stderr, "error: cannot assign bool to float in line %d\n", global_state->cur_line);
             exit(-1);
         }
         CAST(father, eaux, binary, e2, t1);
@@ -247,7 +247,7 @@ static Type *get_expatt( Exp *father, Exp *e1, Exp *e2) {
 
     //Same type array atribution only valid if left side is new expression
     if (!compare_type(t1, t2)) {
-        fprintf(stderr, "assignment with expression with different"
+        fprintf(stderr, "assignment with expression with different "
                         "array type in line %d\n", global_state->cur_line);
         exit(-1);
     }
@@ -575,7 +575,7 @@ static void print_if( Cmd *father, Exp *exp, Stat *stat ) {
     
     t1 = get_exp( exp);
     if( is_array(t1) ) {
-        fprintf(stderr, "error: If condition cannot be an array %d\n", global_state->cur_line);
+        fprintf(stderr, "error: If condition cannot be an array in line %d\n", global_state->cur_line);
         exit(-1);
     }
     else {
@@ -587,7 +587,7 @@ static void print_if( Cmd *father, Exp *exp, Stat *stat ) {
             father->cmd_if.exp = eaux;
         }
         else if( !is_bool(t1) ){
-            fprintf(stderr, "error: If condition cannot be converted to a boolean type %d\n", global_state->cur_line);
+            fprintf(stderr, "error: If condition cannot be converted to a boolean type in line %d\n", global_state->cur_line);
             exit(-1);
         }
     }
@@ -628,7 +628,7 @@ static void get_retexp( Cmd *father, Exp *exp ) {
     }
     else if( (is_bool(t1) && !is_array(t1)) && is_numeral(t2) ) {
         if( is_float(t2) ) {
-            fprintf(stderr, "Float is not compatible with %s return type\n", name);
+            fprintf(stderr, "Float is not compatible with %s return type in line %d\n", name, global_state->cur_line );
             exit(-1);
         }
         else {
@@ -638,7 +638,7 @@ static void get_retexp( Cmd *father, Exp *exp ) {
     }
     else if( is_numeral(t1) && (is_bool(t2) && !is_array(t2) ) ) {
         if( is_float(t1) ) {
-            fprintf(stderr, "Bool is not compatible with %s return type\n", name);
+            fprintf(stderr, "Bool is not compatible with %s return type in line %d\n", name, global_state->cur_line);
             exit(-1);
         }
         else {
@@ -647,7 +647,7 @@ static void get_retexp( Cmd *father, Exp *exp ) {
         }
     }
     else if( !compare_type(t1, t2) ) {
-        fprintf(stderr, "Wrong return type for function %s\n", name);
+        fprintf(stderr, "Wrong return type for function %s in line %d\n", name, global_state->cur_line);
         exit(-1);
     }
 
