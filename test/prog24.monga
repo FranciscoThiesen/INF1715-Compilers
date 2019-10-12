@@ -1,0 +1,8 @@
+#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+
+main() : int {
+    b1 : bool;
+    b2 : bool;
+    
+    return (b1 + b2);
+}
