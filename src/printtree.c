@@ -363,7 +363,7 @@ static Type *get_compare_exp( Exp *father, Exp *e1, Exp *e2 ) {
     }
 
     if (is_bool(t1) || is_bool(t2)) {
-        fprintf(stderr, "error: attempt to compare boolean values %d\n", global_state->cur_line);
+        fprintf(stderr, "error: attempt to compare boolean values in line %d\n", global_state->cur_line);
         exit(-1);
     }
 
@@ -586,7 +586,7 @@ static void print_if( Cmd *father, Exp *exp, Stat *stat ) {
             eaux = asexp( exp, global_state->cur_line, tbool );
             father->cmd_if.exp = eaux;
         }
-        else {
+        else if( !is_bool(t1) ){
             fprintf(stderr, "error: If condition cannot be converted to a boolean type %d\n", global_state->cur_line);
             exit(-1);
         }
