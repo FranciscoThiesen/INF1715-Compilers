@@ -676,7 +676,7 @@ static void print_while ( Cmd *father, Exp *exp, Stat *stat ) {
             eaux = asexp( exp, global_state->cur_line, tbool );
             father->cmd_while.exp = eaux;
         }
-        else {
+        else if( !is_bool(t1) ){
             fprintf(stderr, "While condition cannot be converted to boolean type in line %d\n", global_state->cur_line );
             exit(-1);
         }
