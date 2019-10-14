@@ -1,32 +1,23 @@
 error: invalid operand in logical OR operation in line 16
 error: invalid operand in logical AND operation in line 17
 error: attempt to compare array with non array type in line 21
-error: cannot assign bool to float in line 21
 error: attempt to compare array with non array type in line 22
-error: cannot assign bool to float in line 22
 error: attempt to compare array values in line 23
-error: cannot assign bool to float in line 23
 error: attempt to compare array values in line 24
-error: cannot assign bool to float in line 24
 error: attempt to compare array values in line 25
-error: cannot assign bool to float in line 25
 error: attempt to compare array values in line 26
-error: cannot assign bool to float in line 26
 error: invalid operand to binary sum in line 27
 error: invalid operand to binary sub in line 28
 error: undefined symbol a in line 30
-error: assignment with expression with different array type in line 30
 error: incompatible argument type passed to function main in line 33
 error: incompatible argument type passed to function main in line 33
 error: too many arguments to function main in line 33
 error: undefined symbol s in line 34
 error: undefined symbol s in line 35
 error: undefined symbol s in line 36
-error: assignment with expression with different array type in line 36
 error: undefined symbol s in line 37
 error: undefined symbol s in line 38
-error: assignment with expression with different array type in line 41
+error: trying to assign non array type to array in line 41
 error: attempt to compare array values in line 43
-error: invalid operand to binary sum in line 44
-error: assignment with expression with different array type in line 44
-redefinition of symbol k
+redefinition of var k in line 51
+rejected

@@ -118,32 +118,32 @@ static int check_name(char *id) {
     return 0;
 }
 
-void insert_var(Var *v) {
+bool insert_var(Var *v) {
     Unary_def *udef;
 
-    if(check_name(v->name) < 0) {
-        fprintf(stderr, "redefinition of symbol %s\n", v->name);
-        exit(-1);
-    }
+    if(check_name(v->name) < 0)
+        return true;
 
     udef = tryalloc(sizeof(Unary_def));
     udef->tag = UVAR;
     INSERT_DEF(var, v);
     udefs[current_scope] = udef;
+
+    return false;
 }
 
-void insert_func(Func *f) {
+bool insert_func(Func *f) {
     Unary_def *udef;
 
-    if(check_name(f->name) < 0) {
-        fprintf(stderr, "redefinition of symbol %s\n", f->name);
-        exit(-1);
-    }
+    if(check_name(f->name) < 0)
+        return true;
 
     udef = tryalloc(sizeof(Unary_def));
     udef->tag = UFUNC;
     INSERT_DEF(func, f);
     udefs[current_scope] = udef;
+
+    return false;
 }
 
 Var *get_var(char *id, bool *error) {
@@ -173,5 +173,3 @@ Func *get_func(char *id, bool *error) {
 
     return NULL;
 }
-
-

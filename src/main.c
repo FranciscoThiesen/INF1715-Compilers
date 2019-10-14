@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     int opt;
     FILE *fin;
     FILE *fout;
-	bool accepted;
+    bool accepted;
     const char *optstr = "o:";
     char inputfile[256];
     char outputfile[256];
@@ -75,10 +75,10 @@ int main(int argc, char *argv[]) {
     global_state = tryalloc(sizeof(State));
     init_symbols();
     accepted = type_tree();
-	if (accepted)
-		fprintf(stderr, "accepted\n");
-	else
-		fprintf(stderr, "rejected\n");
+    if (accepted)
+        fprintf(stdout, "accepted\n");
+    else
+        fprintf(stderr, "rejected\n");
 
     fclose(fin);
     if (strcmp(outputfile, "\0"))

@@ -1,2 +1,2 @@
-error: assignment with expression with different array type in line 20
+error: trying to assign non array type to array in line 20
 rejected

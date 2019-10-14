@@ -53,11 +53,12 @@ Def *defseq(Def *delem, Def *dlist) {
     return delem;
 }
 
-Var *vardef(char *name, Type *type) {
+Var *vardef(char *name, Type *type, int line) {
     Var *var = tryalloc(sizeof(Var) );
 
     var->name = name;
     var->type = type;
+    var->line = line;
     var->next = NULL;
 
     return var;
@@ -80,13 +81,14 @@ Var *varseqdef(Var *v1, Var *v2) {
 }
 
 Func *func(char *name, Var *params, Type * type,
-        Stat *stat) {
+        Stat *stat, int line) {
     Func *func = tryalloc(sizeof(Func));
 
     func->name = name;
     func->param = params;
     func->type = type;
     func->stat = stat;
+    func->line = line;
     func->next = NULL;
 
     return func;
@@ -146,7 +148,7 @@ static Cmd *newcmd_if(Exp *exp, int line, Stat *stat) {
     cmd->cmd_if.exp = exp;
     cmd->cmd_if.stat = stat;
     cmd->cmd_if.next = NULL;
-	cmd->cmd_if.line = line;
+    cmd->cmd_if.line = line;
     return cmd;
 }
 
@@ -244,7 +246,7 @@ Cmd *attcmd(Exp *att, int line) {
     cmd->tag = ATTCMD;
     cmd->att.att = att;
     cmd->att.next = NULL;
-	cmd->att.line = line;
+    cmd->att.line = line;
 
     return cmd;
 }
@@ -288,7 +290,7 @@ Exp *unaryexp(Exp_type tag, int line, Exp *e1) {
 
     exp->tag = tag;
     exp->unary.exp = e1;
-	exp->unary.line = line;
+    exp->unary.line = line;
 
     return exp;
 }
@@ -299,7 +301,7 @@ Exp *binaryexp(Exp_type tag, int line, Exp *e1, Exp *e2) {
     exp->tag = tag;
     exp->binary.e1 = e1;
     exp->binary.e2 = e2;
-	exp->binary.line = line;
+    exp->binary.line = line;
 
     return exp;
 }
@@ -310,7 +312,7 @@ Exp *asexp(Exp *e1, int line, Type *type) {
     exp->tag = AS;
     exp->as.type = type;
     exp->as.exp = e1;
-	exp->as.line = line;
+    exp->as.line = line;
 
     return exp;
 }
@@ -366,11 +368,11 @@ Exp *newint(int i) {
     return exp;
 }
 
-Exp *newfloat(double d) {
+Exp *newfloat(float f) {
     Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = EXPFLOAT;
-    exp->expfloat.d = d;
+    exp->expfloat.f = f;
     exp->expfloat.type = newtype(FLOAT);
 
     return exp;

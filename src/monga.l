@@ -13,13 +13,13 @@
 #include "aux.h"
 
 static char *stringcpy();
-static char literalcpy();
+static int literalcpy();
 static int intcpy();
 static int inthexcpy();
-static double doublecpy();
+static float floatcpy();
 static char *idcpy();
 
-unsigned int line = 1;
+int line = 1;
 %}
 
 expdec          ([eE][+-]?[0-9]+)
@@ -42,12 +42,12 @@ char                            { return TK_CHAR; }
 bool                            { return TK_BOOL; }
 
 true                            {
-                                    yylval.c = true;
+                                    yylval.b = true;
                                     return TK_TRUE;
                                 }
 
 false                           {
-                                    yylval.c = false;
+                                    yylval.b = false;
                                     return TK_FALSE;
                                 }
 
@@ -124,7 +124,7 @@ as                              {
                                 }
 
 {decfloat}                      {
-                                    yylval.d = doublecpy();
+                                    yylval.f = floatcpy();
                                     return TK_RAWFLOAT;
                                 }
 
@@ -134,7 +134,7 @@ as                              {
                                 }
 
 {hexfloat}                      {
-                                    yylval.d = doublecpy();
+                                    yylval.f = floatcpy();
                                     return TK_RAWFLOAT;
                                 }
 
@@ -143,8 +143,8 @@ as                              {
                                     return TK_STRING;
                                 }
 {literal}                       {
-                                   yylval.c = literalcpy();
-                                   return TK_LITERAL;
+                                   yylval.i = literalcpy();
+                                   return TK_RAWINT;
                                 }
 
 \#[^\n]*\n                      { line++; }
@@ -189,8 +189,8 @@ static char *stringcpy() {
     return newstr;
 }
 
-static char literalcpy() {
-    char newchar;
+static int  literalcpy() {
+    int  newchar;
 
     if (yytext[1] ==  '\\') {
         newchar = handleescape(yytext[2]);
@@ -219,6 +219,6 @@ static int inthexcpy() {
     return strtol(yytext, NULL, 16);
 }
 
-static double doublecpy() {
-    return strtod(yytext, NULL);
+static float floatcpy() {
+    return strtof(yytext, NULL);
 }

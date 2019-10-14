@@ -4,9 +4,9 @@
 %token TK_IF TK_ELSE TK_WHILE TK_RET TK_NEW TK_AS
 %token TK_AND TK_OR TK_PRINT TK_GEQUALS TK_LEQUALS TK_EQUALS TK_NEQUALS
 %token <i> TK_RAWINT
-%token <d> TK_RAWFLOAT
+%token <f> TK_RAWFLOAT
 %token <str> TK_STRING TK_ID
-%token <c> TK_LITERAL TK_TRUE TK_FALSE
+%token <b> TK_TRUE TK_FALSE
 
 %define parse.error verbose
 
@@ -34,9 +34,9 @@ void yyerror(const char *);
     Func *func;
     Var *var;
     int i;
-    double d;
+    float f;
     char *str;
-    char c;
+    bool b;
     Def *def;
     int line;
 }
@@ -49,7 +49,7 @@ void yyerror(const char *);
             exp_atomic exp_base primitiva var chamada_func exp_var
 %type <elist> exps exp_tail
 %type <def> defs def programa
-%type <line> '(' ')' '+' '-' '*' '/' ';' '=' '[' ']' '<' '>' '!' TK_AS TK_NEW TK_GEQUALS TK_EQUALS TK_LEQUALS TK_NEQUALS TK_OR TK_AND
+%type <line> '(' ')' '+' '-' '*' '/' ':' ';' '=' '[' ']' '<' '>' '!' TK_AS TK_NEW TK_GEQUALS TK_EQUALS TK_LEQUALS TK_NEQUALS TK_OR TK_AND
 %%
 
 programa : defs                               { GLOBAL_TREE = $1; }
@@ -61,13 +61,13 @@ defs : def                                   { $$ = defseq($1, NULL); }
 def : def_var                                { $$ = def(DEFVAR, $1, NULL); } 
     | def_func                               { $$ = def(DEFFUNC, NULL, $1); }
 
-def_var : TK_ID ':' tipo ';'                { $$ = vardef($1, $3); }
+def_var : TK_ID ':' tipo ';'                { $$ = vardef($1, $3, $4); }
 
 def_vars : %empty                           { $$ = NULL; }
          | def_vars def_var                 { $$ = varseqdef($1, $2); };
 
 def_func : TK_ID '(' params ')'
-         tipo_opt stat                      { $$ = func($1, $3, $5, $6) ;}
+         tipo_opt stat                      { $$ = func($1, $3, $5, $6, $2) ;}
 
 tipo_nativo : TK_INT                        { $$ = newtype(INT); }
             | TK_CHAR                       { $$ = newtype(CHAR); }
@@ -83,7 +83,7 @@ tipo_opt : %empty                           { $$ = NULL; }
 params : %empty                             { $$ = NULL; }
        | param param_tail                   { $$ = varseqdef($1, $2); }
 
-param : TK_ID ':' tipo                      { $$ = vardef($1, $3); }
+param : TK_ID ':' tipo                      { $$ = vardef($1, $3, $2); }
 
 param_tail : %empty                         { $$ = NULL; }
            | ',' param param_tail           { $$ = varseqdef($2, $3); }
@@ -145,7 +145,6 @@ primitiva : TK_RAWINT                       { $$ = newint($1); }
           | TK_STRING                       { $$ = newstr($1); }
           | TK_TRUE                         { $$ = newbool($1); }
           | TK_FALSE                        { $$ = newbool($1); }
-          | TK_LITERAL                      { $$ = newchar($1); }
           | var                             { $$ = $1; }
           | '(' exp ')'                     { $$ = $2; }
 

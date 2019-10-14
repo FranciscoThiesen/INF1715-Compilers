@@ -2,8 +2,8 @@
 #define __SEMANTIC_H
 #include "ast.h"
 
-extern void insert_var(Var *var);
-extern void insert_func(Func *func);
+extern bool insert_var(Var *var);
+extern bool insert_func(Func *func);
 extern void init_symbols();
 extern void enter_scope();
 extern void leave_scope();

@@ -26,7 +26,8 @@ enum native_types {
     INT,
     CHAR,
     FLOAT,
-    BOOL
+    BOOL,
+    ERROR
 };
 
 enum def_types {
@@ -129,7 +130,7 @@ union exp {
     } expint;
     struct {
         Exp_type tag;
-        double d;
+        float  f;
         Type *type;
     } expfloat;
     struct {
@@ -164,6 +165,7 @@ enum cmd_type {
 struct var {
     char *name;
     Type *type;
+    int line;
     Var *next;
 };
 
@@ -172,6 +174,7 @@ struct func {
     Var *param;
     Type *type;
     Stat *stat;
+    int line;
     Func *next;
 };
 
@@ -257,10 +260,10 @@ struct stat_monga {
 extern Def *GLOBAL_TREE;
 extern Def *def(Def_types type, Var *var, Func *func);
 extern Def *defseq(Def *delem, Def *dlist);
-extern Var *vardef(char *name, Type *type);
+extern Var *vardef(char *name, Type *type, int line);
 extern Var *varseqdef(Var *v1, Var *v2);
 extern Func *func(char *name, Var *params, Type * type,
-        Stat *stat);
+        Stat *stat, int line);
 extern Func *funcseq(Func *f1, Func *f2);
 extern Type *newtype(Native_types ntype);
 extern Type *newseqtype(Type *t1);
@@ -279,7 +282,7 @@ extern Exp *newexp(Type *type, int line, Exp *e1);
 extern Exp *newvarid(char *name);
 extern Exp_list *listexp(Exp *e1, Exp_list *e2);
 extern Exp *newint(int i);
-extern Exp *newfloat(double d);
+extern Exp *newfloat(float  f);
 extern Exp *newchar(char c);
 extern Exp *newstr(char *s);
 extern Exp *newbool(bool b);
