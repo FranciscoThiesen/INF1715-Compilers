@@ -153,26 +153,12 @@ static void check_explist( char *name,  Var *param_list, Exp_list *arg_list) {
         }
     }
     else if( (is_bool(t1) && !is_array(t1)) && is_numeral(t2) ) {
-        if( is_float(t2) ) {
-            fprintf(stderr, "error: float cannot be cast down to bool on %s function"
-                    " in line %d\n", name, global_state->cur_line);
-            accepted = false;
-        }
-        else {
-            eaux = asexp( arg_list->exp, global_state->cur_line, t1 );
-            arg_list->exp = eaux;
-        }
+        eaux = asexp( arg_list->exp, global_state->cur_line, t1 );
+        arg_list->exp = eaux;
     }
     else if( is_numeral(t1) && (is_bool(t2) && !is_array(t2) ) ) {
-        if( is_float(t1) ) {
-            fprintf(stderr, "error: bool cannot be cast to float on %s function call"
-                    " in line %d\n", name, global_state->cur_line);
-            accepted = false;
-        }
-        else {
-            eaux = asexp( arg_list->exp, global_state->cur_line, t1);
-            arg_list->exp = eaux;
-        }
+        eaux = asexp( arg_list->exp, global_state->cur_line, t1);
+        arg_list->exp = eaux;
     }
     else if( !compare_type(t1, t2) ) {
         fprintf(stderr, "error: incompatible argument type passed to function"
@@ -247,20 +233,6 @@ static Type *get_as( Exp *exp, Type *type) {
         return newtype(ERROR);
     }
 
-    if ((is_bool(texp) && is_float(type))) {
-        fprintf(stderr, "error: cannot cast bool to float in line %d\n",
-                global_state->cur_line);
-        accepted = false;
-        return newtype(ERROR);
-    }
-
-    if ((is_float(texp) && is_bool(type))) {
-        fprintf(stderr, "error: cannot cast float to bool in line %d\n",
-                global_state->cur_line);
-        accepted = false;
-        return newtype(ERROR);
-    }
-
     return type;
 }
 
@@ -278,18 +250,6 @@ static Type *get_expatt( Exp *father, Exp *e1, Exp *e2) {
             return t1;
         }
 
-        if ((is_bool(t1) && is_float(t2))) {
-            fprintf(stderr, "error: cannot assign float to bool in line %d\n",
-                    global_state->cur_line);
-            accepted = false;
-            return newtype(ERROR);
-        }
-        if ((is_float(t1) && is_bool(t2))) {
-            fprintf(stderr, "error: cannot assign bool to float in line %d\n",
-                    global_state->cur_line);
-            accepted = false;
-            return newtype(ERROR);
-        }
         CAST(father, eaux, binary, e2, t1);
         return t1;
     }
@@ -322,7 +282,8 @@ static Type *get_bin_logical( Exp *father, Exp *e1, Exp *e2 ) {
 
 
     tbool = newtype(BOOL);
-    if (is_float(t1) || is_float(t2) || is_array(t1) || is_array(t2)) {
+    if (is_array(t1) || is_array(t2)) {
+        //accepted = true;
         fprintf(stderr, "error: invalid operand in logical");
         switch (father->tag) {
             case OR:
@@ -387,13 +348,6 @@ static Type *get_equality_exp( Exp *father, Exp *e1, Exp *e2 ) {
     if (is_array(t1) || is_array(t2)) {
         fprintf(stderr, "error: attempt to compare array "
                 "with non array type in line %d\n", global_state->cur_line);
-        accepted = false;
-        return newtype(ERROR);
-    }
-
-    if ((is_float(t1) && is_bool(t2)) || (is_bool(t1) && is_float(t2))) {
-        fprintf(stderr, "error: attempting to compare float with bool" 
-                " in line %d\n", global_state->cur_line);
         accepted = false;
         return newtype(ERROR);
     }
@@ -678,7 +632,7 @@ static void type_if( Cmd *father, Exp *exp, Stat *stat ) {
         accepted = false;
     }
     else {
-        if( is_numeral(t1) && !is_float(t1) ) {
+        if( is_numeral(t1) ) {
             Type *tbool;
 
             tbool = newtype(BOOL);
@@ -715,7 +669,7 @@ static void get_retexp( Cmd *father, Exp *exp ) {
     if (!t1) {
         fprintf(stderr, "error: cannot return expression in function %s with"
                 " no return type in line %d\n", name, global_state->cur_line);
-		accepted = false;
+        accepted = false;
         return;
     }
     t2 = get_exp( exp );
@@ -731,26 +685,12 @@ static void get_retexp( Cmd *father, Exp *exp ) {
         }
     }
     else if( (is_bool(t1) && !is_array(t1)) && is_numeral(t2) ) {
-        if( is_float(t2) ) {
-            fprintf(stderr, "error: float is not compatible with %s return type"
-                    " in line %d\n", name, global_state->cur_line );
-            accepted = false;
-        }
-        else {
-            eaux = asexp( exp, global_state->cur_line, t1 );
-            father->cmd_ret_exp.exp = eaux;
-        }
+        eaux = asexp( exp, global_state->cur_line, t1 );
+        father->cmd_ret_exp.exp = eaux;
     }
     else if( is_numeral(t1) && (is_bool(t2) && !is_array(t2) ) ) {
-        if( is_float(t1) ) {
-            fprintf(stderr, "error: bool is not compatible with %s return type"
-                    " in line %d\n", name, global_state->cur_line);
-            accepted = false;
-        }
-        else {
-            eaux = asexp( exp, global_state->cur_line, t1);
-            father->cmd_ret_exp.exp = eaux;
-        }
+        eaux = asexp( exp, global_state->cur_line, t1);
+        father->cmd_ret_exp.exp = eaux;
     }
     else if( !compare_type(t1, t2) ) {
         fprintf(stderr, "error: wrong return type for function %s in line %d\n",
@@ -777,7 +717,7 @@ static void type_while ( Cmd *father, Exp *exp, Stat *stat ) {
         accepted = false;
     }
     else {
-        if( is_numeral(t1) && !is_float(t1) ) {
+        if( is_numeral(t1) ) {
             Type *tbool;
 
             tbool = newtype(BOOL);

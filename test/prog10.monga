@@ -9,6 +9,7 @@ dumb_rec(a : int) : int {
 main() {
 	i : int;
     i = 42;
+
     while( i >= 7 ) {
         @i;
         dumb_rec(i + 7 * 13 + 8 );

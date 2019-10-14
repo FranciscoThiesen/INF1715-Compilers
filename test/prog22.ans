@@ -1,2 +1,1 @@
-error: cannot cast bool to float in line 8
-rejected
+accepted
