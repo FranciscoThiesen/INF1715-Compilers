@@ -834,12 +834,12 @@ void type_defs(Def *def) {
 
     switch (def->tag) {
         case DEFVAR:
-            type_var( def->vars.vars );
-            type_defs( def->vars.next );
+            type_var( def->var.def);
+            type_defs( def->var.next );
             break;
         case DEFFUNC:
-            type_func( def->funcs.funcs );
-            type_defs( def->funcs.next );
+            type_func( def->func.def);
+            type_defs( def->func.next );
             break;
     }
 }

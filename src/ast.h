@@ -182,14 +182,14 @@ union def {
     Def_types tag;
     struct {
         Def_types tag;
-        Var *vars; 
+        Var *def; 
         Def *next;
-    } vars;
+    } var;
     struct {
         Def_types tag;
-        Func *funcs;
+        Func *def;
         Def *next;
-    } funcs;
+    } func;
 };
 
 union cmd {

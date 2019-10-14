@@ -10,16 +10,16 @@
 static Def *defvar(Var *var) {
     Def *newdef = tryalloc(sizeof(Def));
     newdef->tag = DEFVAR;
-    newdef->vars.vars = var;
-    newdef->vars.next = NULL;
+    newdef->var.def = var;
+    newdef->var.next = NULL;
     return newdef;
 }
 
 static Def *deffunc(Func *func) {
     Def *newdef = tryalloc(sizeof(Def));
     newdef->tag = DEFFUNC;
-    newdef->funcs.funcs = func;
-    newdef->funcs.next = NULL;
+    newdef->func.def = func;
+    newdef->func.next = NULL;
     return newdef;
 }
 
@@ -41,10 +41,10 @@ Def *defseq(Def *delem, Def *dlist) {
         return dlist;
     switch (delem->tag){
         case DEFVAR:
-            delem->vars.next= dlist;
+            delem->var.next= dlist;
             break;
         case DEFFUNC:
-            delem->funcs.next = dlist;
+            delem->func.next = dlist;
             break;
         default:
             fprintf(stderr, "unknown type\n");    

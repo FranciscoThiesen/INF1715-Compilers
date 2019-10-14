@@ -12,51 +12,30 @@
 
 static int current_scope = 0;
 
-typedef union unary_def Unary_def;
-typedef enum unary_def_types Unary_def_types;
-
-enum unary_def_types {
-    UVAR,
-    UFUNC,
-};
-
-union unary_def {
-    Unary_def_types tag;
-    struct {
-        Unary_def_types tag;
-        Var *def;
-        Unary_def *next;
-    } var;
-    struct {
-        Unary_def_types tag;
-        Func *def;
-        Unary_def *next;
-    } func;
-};
-
-static Unary_def *udefs[MAX_SCOPES];
+static Def *defs[MAX_SCOPES];
 
 #define INSERT_DEF(t, p)	\
-    udef->t.def = p;		\
-    udef->t.next = udefs[current_scope];
+    def->t.def = p;		\
+    def->t.next = defs[current_scope];
 
 void clean_scope(int scope) {
-    Unary_def *udef;
-    Unary_def *uaux;
+    Def *def;
+    Def *uaux;
 
-    udef = udefs[scope];
-    while(udef) {
-        switch(udef->tag) {
-            case UVAR:
-                uaux = udef;
-                udef = udef->var.next;
+    def = defs[scope];
+    while(def) {
+        switch(def->tag) {
+            case DEFVAR:
+                uaux = def;
+                def = def->var.next;
                 break;
-            case UFUNC:
-                uaux = udef;
-                udef = udef->func.next;
+            case DEFFUNC:
+                uaux = def;
+                def = def->func.next;
                 break;
             default:
-                fprintf(stderr, "unknown unary def type in scope array %d\n", udef->tag);
+                fprintf(stderr, "unknown unary def type in scope array %d\n",
+                        def->tag);
                 exit(-1);
         }
         free(uaux);
@@ -67,7 +46,7 @@ void clean_scope(int scope) {
 void enter_scope() {
     current_scope++;
     clean_scope(current_scope);
-    udefs[current_scope] = NULL;
+    defs[current_scope] = NULL;
 }
 
 void leave_scope() {
@@ -78,29 +57,29 @@ void init_symbols() {
     int scope;
 
     for (scope = 0; scope < MAX_SCOPES; scope++)
-        udefs[scope] = NULL;
+        defs[scope] = NULL;
 }
 
 void clean_symbols() {
     clean_scope(current_scope);
 }
 
-static Unary_def *search_scope(char *id, int scope) {
-    Unary_def *udef = udefs[scope];
+static Def *search_scope(char *id, int scope) {
+    Def *def = defs[scope];
 
-    while (udef) {
-        switch(udef->tag) {
-            case UVAR:
-                if (!(strcmp(udef->var.def->name, id)))
-                    return udef;
+    while (def) {
+        switch(def->tag) {
+            case DEFVAR:
+                if (!(strcmp(def->var.def->name, id)))
+                    return def;
 
-                udef = udef->var.next;
+                def = def->var.next;
                 break;
-            case UFUNC:
-                if (!(strcmp(udef->func.def->name, id)))
-                    return udef;
+            case DEFFUNC:
+                if (!(strcmp(def->func.def->name, id)))
+                    return def;
 
-                udef = udef->func.next;
+                def = def->func.next;
                 break;
             default:
                 fprintf(stderr, "unknown unary def type in scope array\n");
@@ -119,56 +98,56 @@ static int check_name(char *id) {
 }
 
 bool insert_var(Var *v) {
-    Unary_def *udef;
+    Def *def;
 
     if(check_name(v->name) < 0)
         return true;
 
-    udef = tryalloc(sizeof(Unary_def));
-    udef->tag = UVAR;
+    def = tryalloc(sizeof(Def));
+    def->tag = DEFVAR;
     INSERT_DEF(var, v);
-    udefs[current_scope] = udef;
+    defs[current_scope] = def;
 
     return false;
 }
 
 bool insert_func(Func *f) {
-    Unary_def *udef;
+    Def *def;
 
     if(check_name(f->name) < 0)
         return true;
 
-    udef = tryalloc(sizeof(Unary_def));
-    udef->tag = UFUNC;
+    def = tryalloc(sizeof(Def));
+    def->tag = DEFFUNC;
     INSERT_DEF(func, f);
-    udefs[current_scope] = udef;
+    defs[current_scope] = def;
 
     return false;
 }
 
 Var *get_var(char *id, bool *error) {
-    Unary_def *udef;
+    Def *def;
     int scope;
 
     *error = false;
     for (scope = current_scope; scope >= 0; scope--)
-        if ((udef = search_scope(id, scope)) && udef->tag == UVAR)
-            return udef->var.def;
-        else if (udef && udef->tag != UVAR)
+        if ((def = search_scope(id, scope)) && def->tag == DEFVAR)
+            return def->var.def;
+        else if (def && def->tag != DEFVAR)
             *error = true;
 
     return NULL;
 }
 
 Func *get_func(char *id, bool *error) {
-    Unary_def *udef;
+    Def *def;
     int scope;
 
     *error = false;
     for (scope = current_scope; scope >= 0; scope--)
-        if ((udef = search_scope(id, scope)) && udef->tag == UFUNC)
-            return udef->func.def;
-        else if (udef && udef->tag != UFUNC)
+        if ((def = search_scope(id, scope)) && def->tag == DEFFUNC)
+            return def->func.def;
+        else if (def && def->tag != DEFFUNC)
             *error = true;
 
     return NULL;
