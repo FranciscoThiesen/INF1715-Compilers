@@ -166,16 +166,14 @@ struct var {
     char *name;
     Type *type;
     int line;
-    Var *next;
 };
 
 struct func {
     char *name;
-    Var *param;
+    Def *param;
     Type *type;
     Stat *stat;
     int line;
-    Func *next;
 };
 
 union def {
@@ -253,23 +251,21 @@ union cmd {
 };
 
 struct stat_monga {
-    Var *vars;
+    Def *vars;
     Cmd *cmds;
 };
 
 extern Def *GLOBAL_TREE;
-extern Def *def(Def_types type, Var *var, Func *func);
 extern Def *defseq(Def *delem, Def *dlist);
-extern Var *vardef(char *name, Type *type, int line);
-extern Var *varseqdef(Var *v1, Var *v2);
-extern Func *func(char *name, Var *params, Type * type,
+extern Def *vardef(char *name, Type *type, int line);
+extern Def *varseqdef(Def *v1, Def *v2);
+extern Def *funcdef(char *name, Def *params, Type * type,
         Stat *stat, int line);
-extern Func *funcseq(Func *f1, Func *f2);
 extern Type *newtype(Native_types ntype);
 extern Type *newseqtype(Type *t1);
 extern Var *newparamseq(Var *p1, Var *p2);
 extern Var *newparam(char *name, Type *type);
-extern Stat *newstat(Var *var, Cmd *cmd);
+extern Stat *newstat(Def *var, Cmd *cmd);
 extern Cmd *newcmd(Cmd_type tag, int line, Exp *exp, Stat *stat, Stat *stat2);
 extern Cmd *newseqcmd(Cmd *c1, Cmd *c2);
 extern Cmd *callcmd(Exp *call, int line);

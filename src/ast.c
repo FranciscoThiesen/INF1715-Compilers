@@ -23,7 +23,7 @@ static Def *deffunc(Func *func) {
     return newdef;
 }
 
-Def *def(Def_types type, Var *var, Func *func) {
+static Def *def(Def_types type, Var *var, Func *func) {
     switch (type){
         case DEFVAR:
             return defvar(var);
@@ -53,34 +53,33 @@ Def *defseq(Def *delem, Def *dlist) {
     return delem;
 }
 
-Var *vardef(char *name, Type *type, int line) {
+Def *vardef(char *name, Type *type, int line) {
     Var *var = tryalloc(sizeof(Var) );
 
     var->name = name;
     var->type = type;
     var->line = line;
-    var->next = NULL;
 
-    return var;
+    return def(DEFVAR, var, NULL);
 }
 
-Var *varseqdef(Var *v1, Var *v2) {
-    Var *vaux;
+Def *varseqdef(Def *v1, Def *v2) {
+    Def *vaux;
     if (!v1) {
-        v2->next = v1;
+        v2->var.next = v1;
         return v2;
     }
 
     vaux = v1;
-    while (vaux->next) {
-        vaux = vaux->next;
+    while (vaux->var.next) {
+        vaux = vaux->var.next;
     }
 
-    vaux->next = v2;
+    vaux->var.next = v2;
     return v1;
 }
 
-Func *func(char *name, Var *params, Type * type,
+Def *funcdef(char *name, Def *params, Type * type,
         Stat *stat, int line) {
     Func *func = tryalloc(sizeof(Func));
 
@@ -89,15 +88,8 @@ Func *func(char *name, Var *params, Type * type,
     func->type = type;
     func->stat = stat;
     func->line = line;
-    func->next = NULL;
 
-    return func;
-}
-
-Func *funcseq(Func *f1, Func *f2) {
-    f1->next = f2;
-
-    return f1;
+    return def(DEFFUNC, NULL, func);
 }
 
 Type *newtype(Native_types ntype) {
@@ -118,12 +110,6 @@ Type *newseqtype(Type *t1) {
     return type;
 }
 
-Var *newparamseq(Var *p1, Var *p2) {
-    p1->next = p2;
-
-    return p1;
-}
-
 Var *newparam(char *name, Type *type) {
     Var *param = tryalloc(sizeof(Var));
 
@@ -133,10 +119,10 @@ Var *newparam(char *name, Type *type) {
     return param;
 }
 
-Stat *newstat(Var *var, Cmd *cmd) {
+Stat *newstat(Def *dvar, Cmd *cmd) {
     Stat *stat = tryalloc(sizeof(Stat));
 
-    stat->vars = var;
+    stat->vars = dvar;
     stat->cmds = cmd;
 
     return stat;

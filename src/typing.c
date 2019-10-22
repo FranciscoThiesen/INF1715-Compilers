@@ -78,34 +78,42 @@ static bool is_numeral(Type *t) {
 static Type *get_exp( Exp *exp );
 
 static void type_stat( Stat *stat );
+static void type_defs(Def *def);
 
-static void type_var( Var *v ) {
-    if( v == NULL )
+static void type_var( Def *dvar ) {
+    if (dvar == NULL)
         return;
 
+    Var *v;
     bool ok;
+
+    v = dvar->var.def;
+    if( v == NULL )
+        return;
 
     global_state->cur_line = v->line;
     ok = insert_var(v);
     if (!ok)
         fprintf(stderr, "redefinition of var %s in line %d\n",
                 v->name, global_state->cur_line);
-
-    type_var( v->next );
 }
-static void type_params( Var* param ) {
+static void type_params( Def* dparam ) {
+    bool ok;
+    Var *param;
+
+    if (dparam == NULL)
+        return ;
+
+    param = dparam->var.def;
     if( param == NULL )
         return;
-
-    bool ok;
 
     ok = insert_var(param);
     if (!ok)
         fprintf(stderr, "redefinition of parameter %s in line %d\n",
                 param->name, global_state->cur_line);
 
-    if( param->next != NULL )
-        type_params( param->next );
+    type_params( dparam->var.next );
 }
 
 static Type *get_expvarid( Exp *exp_var ) {
@@ -132,7 +140,7 @@ static Type *get_expvarid( Exp *exp_var ) {
     return v->type;
 }
 
-static void check_explist( char *name,  Var *param_list, Exp_list *arg_list) {
+static void check_explist( char *name,  Def *param_list, Exp_list *arg_list) {
     if( param_list == NULL && arg_list == NULL) return;
     if( param_list == NULL || arg_list == NULL) {
         if( param_list == NULL ) {
@@ -146,9 +154,11 @@ static void check_explist( char *name,  Var *param_list, Exp_list *arg_list) {
         }
         accepted = false;
     }
-
+    Var *param;
     Type *t1, *t2;
-    t1 = param_list->type;
+
+    param = param_list->var.def;
+    t1 = param->type;
     t2 = get_exp(arg_list->exp);
     if (is_error(t1) || is_error(t2))
         return;
@@ -174,7 +184,7 @@ static void check_explist( char *name,  Var *param_list, Exp_list *arg_list) {
         accepted = false;
     }
 
-    check_explist( name, param_list->next, arg_list->next );
+    check_explist( name, param_list->var.next, arg_list->next );
 }
 
 static Type *get_call( Exp *exp ) {
@@ -670,6 +680,7 @@ static void type_ret () {
 static void get_retexp( Cmd *father, Exp *exp ) {
     Type *t1, *t2;
     char *name;
+
     name = global_state->cur_func_name;
     t1 = global_state->cur_func_type;
     if (!t1) {
@@ -678,6 +689,7 @@ static void get_retexp( Cmd *father, Exp *exp ) {
         accepted = false;
         return;
     }
+
     t2 = get_exp( exp );
     if (is_error(t2))
         return;
@@ -805,16 +817,21 @@ static void type_stat( Stat *stat ) {
     }
 
     enter_scope();
-    type_var( stat->vars);
+    type_defs( stat->vars);
     type_cmd( stat->cmds);
     leave_scope();
 }
 
-static void type_func( Func *f) {
-    if( f == NULL )
+static void type_func( Def *dfunc) {
+    Func *f;
+    bool ok;
+
+    if (dfunc == NULL)
         return;
 
-    bool ok;
+    f = dfunc->func.def;
+    if( f == NULL )
+        return;
 
     global_state->cur_line = f->line;
     ok = insert_func(f);
@@ -830,21 +847,19 @@ static void type_func( Func *f) {
         type_stat( f->stat );
 
     leave_scope();
-    if( f->next )
-        type_func( f->next );
 }
 
-void type_defs(Def *def) {
+static void type_defs(Def *def) {
     if (!def)
         return;
 
     switch (def->tag) {
         case DEFVAR:
-            type_var( def->var.def);
+            type_var( def );
             type_defs( def->var.next );
             break;
         case DEFFUNC:
-            type_func( def->func.def );
+            type_func( def );
             type_defs( def->func.next );
             break;
     }

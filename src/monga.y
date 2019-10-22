@@ -31,8 +31,6 @@ void yyerror(const char *);
     Exp_list *elist;
     Stat *stat;
     Cmd *cmd;
-    Func *func;
-    Var *var;
     int i;
     float f;
     char *str;
@@ -42,13 +40,11 @@ void yyerror(const char *);
 }
 %type <cmd> cmds cmd
 %type <type> tipo_nativo tipo tipo_opt
-%type <var> def_var def_vars params param param_tail
-%type <func> def_func
 %type <stat> stat
 %type <exp> exp exp_and exp_comp exp_somasub exp_divmul exp_unary
             exp_atomic exp_base primitiva var chamada_func exp_var
 %type <elist> exps exp_tail
-%type <def> defs def programa
+%type <def> def_var def_vars def_func params param param_tail defs def programa
 %type <line> '(' ')' '+' '-' '*' '/' ':' ';' '=' '[' ']' '<' '>' '!' TK_AS TK_NEW TK_GEQUALS TK_EQUALS TK_LEQUALS TK_NEQUALS TK_OR TK_AND
 %%
 
@@ -58,8 +54,8 @@ programa : defs                               { GLOBAL_TREE = $1; }
 defs : def                                   { $$ = defseq($1, NULL); }
      | def defs                              { $$ = defseq($1, $2); }
 
-def : def_var                                { $$ = def(DEFVAR, $1, NULL); } 
-    | def_func                               { $$ = def(DEFFUNC, NULL, $1); }
+def : def_var                                { $$ = $1; }
+    | def_func                               { $$ = $1; }
 
 def_var : TK_ID ':' tipo ';'                { $$ = vardef($1, $3, $4); }
 
@@ -67,7 +63,7 @@ def_vars : %empty                           { $$ = NULL; }
          | def_vars def_var                 { $$ = varseqdef($1, $2); };
 
 def_func : TK_ID '(' params ')'
-         tipo_opt stat                      { $$ = func($1, $3, $5, $6, $2) ;}
+         tipo_opt stat                      { $$ = funcdef($1, $3, $5, $6, $2); }
 
 tipo_nativo : TK_INT                        { $$ = newtype(INT); }
             | TK_CHAR                       { $$ = newtype(CHAR); }
