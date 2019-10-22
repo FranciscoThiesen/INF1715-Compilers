@@ -83,19 +83,27 @@ static void type_var( Var *v ) {
     if( v == NULL )
         return;
 
-    bool error;
+    bool ok;
 
     global_state->cur_line = v->line;
-    error = insert_var(v);
-    if (error)
+    ok = insert_var(v);
+    if (!ok)
         fprintf(stderr, "redefinition of var %s in line %d\n",
                 v->name, global_state->cur_line);
 
     type_var( v->next );
 }
 static void type_params( Var* param ) {
-    if( param == NULL ) return;
-    insert_var(param);
+    if( param == NULL )
+        return;
+
+    bool ok;
+
+    ok = insert_var(param);
+    if (!ok)
+        fprintf(stderr, "redefinition of parameter %s in line %d\n",
+                param->name, global_state->cur_line);
+
     if( param->next != NULL )
         type_params( param->next );
 }
@@ -254,7 +262,6 @@ static Type *get_expatt( Exp *father, Exp *e1, Exp *e2) {
         return t1;
     }
 
-    //Same type array atribution only valid if left side is new expression
     if (!compare_type(t1, t2)) {
         if (e2->tag == NEW)
             fprintf(stderr, "error: assignment with expression with different "
@@ -283,7 +290,6 @@ static Type *get_bin_logical( Exp *father, Exp *e1, Exp *e2 ) {
 
     tbool = newtype(BOOL);
     if (is_array(t1) || is_array(t2)) {
-        //accepted = true;
         fprintf(stderr, "error: invalid operand in logical");
         switch (father->tag) {
             case OR:
@@ -804,15 +810,15 @@ static void type_stat( Stat *stat ) {
     leave_scope();
 }
 
-static void type_func( Func *f ) {
+static void type_func( Func *f) {
     if( f == NULL )
         return;
 
-    bool error;
+    bool ok;
 
     global_state->cur_line = f->line;
-    error = insert_func(f);
-    if (error)
+    ok = insert_func(f);
+    if (!ok)
         fprintf(stderr, "redefinition of function %s in line %d\n",
                 f->name, global_state->cur_line);
 
@@ -838,13 +844,13 @@ void type_defs(Def *def) {
             type_defs( def->var.next );
             break;
         case DEFFUNC:
-            type_func( def->func.def);
+            type_func( def->func.def );
             type_defs( def->func.next );
             break;
     }
 }
 
-bool  type_tree() {
+bool type_tree() {
     type_defs(GLOBAL_TREE);
     return accepted;
 }

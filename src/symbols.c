@@ -101,28 +101,28 @@ bool insert_var(Var *v) {
     Def *def;
 
     if(check_name(v->name) < 0)
-        return true;
+        return false;
 
     def = tryalloc(sizeof(Def));
     def->tag = DEFVAR;
     INSERT_DEF(var, v);
     defs[current_scope] = def;
 
-    return false;
+    return true;
 }
 
 bool insert_func(Func *f) {
     Def *def;
 
     if(check_name(f->name) < 0)
-        return true;
+        return false;
 
     def = tryalloc(sizeof(Def));
     def->tag = DEFFUNC;
     INSERT_DEF(func, f);
     defs[current_scope] = def;
 
-    return false;
+    return true;
 }
 
 Var *get_var(char *id, bool *error) {
