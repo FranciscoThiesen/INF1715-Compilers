@@ -75,8 +75,6 @@ static bool is_numeral(Type *t) {
     return ((is_int(t) || is_float(t) || is_char(t)) && !is_array(t));
 }
 
-static Type *get_exp( Exp *exp );
-
 static void type_stat( Stat *stat );
 static void type_defs(Def *def);
 
@@ -116,7 +114,7 @@ static void type_params( Def* dparam ) {
     type_params( dparam->var.next );
 }
 
-static Type *get_expvarid( Exp *exp_var ) {
+static Type *get_exp_typevarid( Exp *exp_var ) {
     Var *v;
     bool error;
 
@@ -159,7 +157,7 @@ static void check_explist( char *name,  Def *param_list, Exp_list *arg_list) {
 
     param = param_list->var.def;
     t1 = param->type;
-    t2 = get_exp(arg_list->exp);
+    t2 = get_exp_type(arg_list->exp);
     if (is_error(t1) || is_error(t2))
         return;
 
@@ -216,7 +214,7 @@ static Type *get_call( Exp *exp ) {
 static Type *get_new( Type *type, Exp *exp) {
     Type *texp;
 
-    texp = get_exp( exp );
+    texp = get_exp_type( exp );
     if (is_error(texp))
         return newtype(ERROR);
 
@@ -233,7 +231,7 @@ static Type *get_new( Type *type, Exp *exp) {
 static Type *get_as( Exp *exp, Type *type) {
     Type *texp;
 
-    texp = get_exp( exp );
+    texp = get_exp_type( exp );
     if(is_error(texp))
         return newtype(ERROR);
 
@@ -254,12 +252,12 @@ static Type *get_as( Exp *exp, Type *type) {
     return type;
 }
 
-static Type *get_expatt( Exp *father, Exp *e1, Exp *e2) {
+static Type *get_exp_typeatt( Exp *father, Exp *e1, Exp *e2) {
     Type *t1, *t2;
     Exp *eaux;
 
-    t1 = get_exp( e1 );
-    t2 = get_exp( e2 );
+    t1 = get_exp_type( e1 );
+    t2 = get_exp_type( e2 );
     if(is_error(t1) || is_error(t2))
         return newtype(ERROR);
 
@@ -292,8 +290,8 @@ static Type *get_bin_logical( Exp *father, Exp *e1, Exp *e2 ) {
     Type *tbool;
     Exp *eaux, *eaux2;
 
-    t1 = get_exp( e1 );
-    t2 = get_exp( e2 );
+    t1 = get_exp_type( e1 );
+    t2 = get_exp_type( e2 );
     if(is_error(t1) || is_error(t2))
         return newtype(ERROR);
 
@@ -328,7 +326,7 @@ static Type *get_not( Exp *father, Exp *e1 ) {
     Type *tbool;
     Exp *eaux;
 
-    t1 = get_exp( e1 );
+    t1 = get_exp_type( e1 );
     if (is_error(t1))
         return newtype(ERROR);
 
@@ -344,8 +342,8 @@ static Type *get_equality_exp( Exp *father, Exp *e1, Exp *e2 ) {
     Exp *eaux;
     Type *tbool;
 
-    t1 = get_exp( e1 );
-    t2 = get_exp( e2 );
+    t1 = get_exp_type( e1 );
+    t2 = get_exp_type( e2 );
     if (is_error(t1) || is_error(t2))
         return newtype(ERROR);
 
@@ -406,8 +404,8 @@ static Type *get_compare_exp( Exp *father, Exp *e1, Exp *e2 ) {
     Exp *eaux;
     Type *tbool;
 
-    t1 = get_exp( e1 );
-    t2 = get_exp( e2 );
+    t1 = get_exp_type( e1 );
+    t2 = get_exp_type( e2 );
     if (is_error(t1) || is_error(t2))
         return newtype(ERROR);
 
@@ -454,8 +452,8 @@ static Type *get_arit_type(Exp *father, Exp *e1, Exp *e2) {
     Exp *eaux;
     Type *tint;
 
-    t1 = get_exp( e1 );
-    t2 = get_exp( e2 );
+    t1 = get_exp_type( e1 );
+    t2 = get_exp_type( e2 );
     if (is_error(t1) || is_error(t2))
         return newtype(ERROR);
 
@@ -503,10 +501,10 @@ static Type *get_arit_type(Exp *father, Exp *e1, Exp *e2) {
 
 }
 
-static Type *get_expvar( Exp *e1, Exp *e2) {
+static Type *get_exp_typevar( Exp *e1, Exp *e2) {
     Type *t1, *t2;
 
-    t1 = get_exp( e1 );
+    t1 = get_exp_type( e1 );
     if (is_error(t1))
         return newtype(ERROR);
 
@@ -517,7 +515,7 @@ static Type *get_expvar( Exp *e1, Exp *e2) {
         return newtype(ERROR);
     }
 
-    t2 = get_exp( e2 );
+    t2 = get_exp_type( e2 );
     if (is_error(t2))
         return newtype(ERROR);
 
@@ -536,7 +534,7 @@ static Type *get_minus( Exp *father, Exp *e1 ) {
     Exp *eaux;
 
     global_state->cur_line = father->unary.line;
-    t1 = get_exp( e1 );
+    t1 = get_exp_type( e1 );
     if (is_error(t1))
         return newtype(ERROR);
 
@@ -555,13 +553,13 @@ static Type *get_minus( Exp *father, Exp *e1 ) {
     return t1;
 }
 
-static Type *get_exp( Exp *exp ) {
+Type *get_exp_type( Exp *exp ) {
     if( exp != NULL ) {
         switch( exp->tag ) {
             case VAR:
-                return get_expvar( exp->binary.e1, exp->binary.e2 );
+                return get_exp_typevar( exp->binary.e1, exp->binary.e2 );
             case VARID:
-                return get_expvarid( exp );
+                return get_exp_typevarid( exp );
             case CALLEXP:
                 return get_call( exp );
             case AS:
@@ -597,7 +595,7 @@ static Type *get_exp( Exp *exp ) {
                 return exp->expbool.type;
             case EXPATT:
                 global_state->cur_line = exp->binary.line;
-                return get_expatt( exp, exp->binary.e1, exp->binary.e2 );
+                return get_exp_typeatt( exp, exp->binary.e1, exp->binary.e2 );
             case EQ:
                 global_state->cur_line = exp->binary.line;
                 return get_equality_exp( exp, exp->binary.e1, exp->binary.e2 );
@@ -638,7 +636,7 @@ static void type_if( Cmd *father, Exp *exp, Stat *stat ) {
     Type *t1;
     Exp *eaux;
 
-    t1 = get_exp( exp);
+    t1 = get_exp_type( exp);
     if (is_error(t1))
         return;
 
@@ -690,7 +688,7 @@ static void get_retexp( Cmd *father, Exp *exp ) {
         return;
     }
 
-    t2 = get_exp( exp );
+    t2 = get_exp_type( exp );
     if (is_error(t2))
         return;
 
@@ -722,7 +720,7 @@ static void type_while ( Cmd *father, Exp *exp, Stat *stat ) {
     Type *t1;
     Exp *eaux;
 
-    t1 = get_exp(exp);
+    t1 = get_exp_type(exp);
     // certificar de que esta single bool
 
     if(is_error(t1))
@@ -754,7 +752,7 @@ static void type_while ( Cmd *father, Exp *exp, Stat *stat ) {
 }
 
 static void type_print( Exp *exp ) {
-    get_exp( exp);
+    get_exp_type( exp);
 }
 
 static void type_cmd( Cmd *cmd ) {
@@ -794,12 +792,12 @@ static void type_cmd( Cmd *cmd ) {
             break;
         case CALLCMD:
             global_state->cur_line = cmd->call.line;
-            get_exp( cmd->call.call );
+            get_exp_type( cmd->call.call );
             type_cmd( cmd->call.next );
             break;
         case ATTCMD:
             global_state->cur_line = cmd->att.line;
-            get_exp( cmd->att.att );
+            get_exp_type( cmd->att.att );
             type_cmd( cmd->att.next );
             break;
         case STAT:

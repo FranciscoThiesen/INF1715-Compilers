@@ -11,6 +11,7 @@
 #include "typing.h"
 #include "symbols.h"
 #include "aux.h"
+#include "gen.h"
 
 Def *GLOBAL_TREE;
 State *global_state;
@@ -76,7 +77,7 @@ int main(int argc, char *argv[]) {
     init_symbols();
     accepted = type_tree();
     if (accepted)
-        fprintf(stdout, "accepted\n");
+        gen_code(global_state);
     else
         fprintf(stderr, "rejected\n");
 
