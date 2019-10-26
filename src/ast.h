@@ -166,6 +166,7 @@ struct var {
     char *name;
     Type *type;
     int line;
+    bool is_global;
 };
 
 struct func {

@@ -1,6 +1,7 @@
 //Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
 #include "ast.h"
+#include "aux.h"
 #include "symbols.h"
 #include "typing.h"
 #include <stdio.h>
@@ -28,14 +29,6 @@ static bool is_float(Type *t) {
 
     if(t->tag == SINGLE) return (t->single.type == FLOAT);
     return is_float(t->seq.next);
-}
-
-static bool is_int(Type  *t) {
-    if (t == NULL)
-        return 0;
-
-    if(t->tag == SINGLE) return (t->single.type == INT);
-    return is_int(t->seq.next);
 }
 
 static bool is_char(Type *t) {
@@ -114,7 +107,7 @@ static void type_params( Def* dparam ) {
     type_params( dparam->var.next );
 }
 
-static Type *get_exp_typevarid( Exp *exp_var ) {
+static Type *get_exp_varid( Exp *exp_var ) {
     Var *v;
     bool error;
 
@@ -135,6 +128,7 @@ static Type *get_exp_typevarid( Exp *exp_var ) {
         return newtype(ERROR);
     }
 
+    exp_var->var.def = v;
     return v->type;
 }
 
@@ -252,7 +246,7 @@ static Type *get_as( Exp *exp, Type *type) {
     return type;
 }
 
-static Type *get_exp_typeatt( Exp *father, Exp *e1, Exp *e2) {
+static Type *get_exp_att( Exp *father, Exp *e1, Exp *e2) {
     Type *t1, *t2;
     Exp *eaux;
 
@@ -559,7 +553,7 @@ Type *get_exp_type( Exp *exp ) {
             case VAR:
                 return get_exp_typevar( exp->binary.e1, exp->binary.e2 );
             case VARID:
-                return get_exp_typevarid( exp );
+                return get_exp_varid( exp );
             case CALLEXP:
                 return get_call( exp );
             case AS:
@@ -595,7 +589,7 @@ Type *get_exp_type( Exp *exp ) {
                 return exp->expbool.type;
             case EXPATT:
                 global_state->cur_line = exp->binary.line;
-                return get_exp_typeatt( exp, exp->binary.e1, exp->binary.e2 );
+                return get_exp_att( exp, exp->binary.e1, exp->binary.e2 );
             case EQ:
                 global_state->cur_line = exp->binary.line;
                 return get_equality_exp( exp, exp->binary.e1, exp->binary.e2 );

@@ -59,6 +59,7 @@ Def *vardef(char *name, Type *type, int line) {
     var->name = name;
     var->type = type;
     var->line = line;
+    var->is_global = false;
 
     return def(DEFVAR, var, NULL);
 }
