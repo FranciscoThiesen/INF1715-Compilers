@@ -114,6 +114,19 @@ static int gen_exp_varid(Exp *exp, State *global_state) {
     return global_state->exp_count;
 }
 
+static void gen_ret() {
+    printf("ret void\n");
+}
+
+static void gen_retexp(Exp *exp, State *global_state) {
+    int numexp = gen_exp(exp, global_state);
+
+    printf("ret ");
+    gen_type(global_state->cur_func_type, false);
+    printf(" %%e%d\n", numexp);
+
+}
+
 
 static int gen_exp(Exp *exp, State *global_state) {
     if( exp == NULL )
@@ -129,6 +142,12 @@ static int gen_exp(Exp *exp, State *global_state) {
             return gen_exp_att(exp->binary.e1, exp->binary.e2, global_state);
         case VARID:
             return gen_exp_varid(exp, global_state);
+        case RET:
+            gen_ret();
+            break;
+        case RETEXP:
+            gen_retexp(exp, global_state);
+            break;
         default:
             fprintf(stderr, "not implemented\n");
             exit(-1);
@@ -172,6 +191,15 @@ static void gen_cmd( Cmd *cmd, State *global_state ) {
         case ATTCMD:
             gen_exp(cmd->att.att, global_state );
             gen_cmd(cmd->att.next, global_state);
+            break;
+        case RET:
+            gen_ret();
+            gen_cmd(cmd->cmd_ret.next, global_state);
+            break;
+        case RETEXP:
+            global_state->cur_line = cmd->cmd_ret_exp.line;
+            gen_retexp(cmd->cmd_ret_exp.exp, global_state);
+            gen_cmd(cmd->cmd_ret_exp.next, global_state);
             break;
         default:
             fprintf(stderr, "not implemented\n");
@@ -229,7 +257,6 @@ static void gen_func(Def *dfunc, State *global_state) {
     if (f->stat)
         gen_stat(f->stat, global_state);
 
-    printf("ret i32 0\n");
     printf("}\n");
 
 }
