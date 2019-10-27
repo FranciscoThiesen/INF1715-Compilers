@@ -20,10 +20,10 @@ static int compare_type(Type *t1, Type *t2) {
 
     if(t1->tag != t2->tag) return 0;
     if(t1->tag == SEQ) return compare_type(t1->seq.next, t2->seq.next );
-	if ((t1->single.type == CHAR && t2->single.type == INT) ||
-			(t1->single.type == INT && t2->single.type == CHAR)) {
-				return 1;
-	}
+    if ((t1->single.type == CHAR && t2->single.type == INT) ||
+            (t1->single.type == INT && t2->single.type == CHAR)) {
+        return 1;
+    }
     return ( t1->single.type == t2->single.type );
 }
 
@@ -448,20 +448,12 @@ static Type *get_compare_exp( Exp *father, Exp *e1, Exp *e2 ) {
 static Type *get_arit_type(Exp *father, Exp *e1, Exp *e2) {
     Type *t1, *t2;
     Exp *eaux;
-    Type *tint;
 
     t1 = get_exp_type( e1 );
     t2 = get_exp_type( e2 );
     if (is_error(t1) || is_error(t2))
         return newtype(ERROR);
 
-    tint = newtype(INT);
-    if (is_char(t1)) {
-        CAST(father, eaux, binary, e1, tint)
-    }
-    if (is_char(t2)) {
-        CAST(father, eaux, binary, e2, tint)
-    }
     if (!is_numeral(t1) || !is_numeral(t2)) {
         fprintf(stderr, "error: invalid operand to binary ");
         switch (father->tag) {

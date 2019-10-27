@@ -23,7 +23,6 @@
     printf("call i32 (i8*, ...) @printf( i8* getelementptr ([%d x i8], [%d x i8]*" \
             "@fmt%s, i32 0, i32 0), %s %%e%d)\n", l, l, t, tfmt, expnum);
 
-
 static void gen_native_type(Native_types type, bool is_seq) {
     if (is_seq)
         printf("*");
@@ -137,11 +136,66 @@ static void gen_retexp(Exp *exp, State *global_state) {
 
 }
 
+static int gen_arit_exp(Exp *e1, Exp *e2, Exp_type etype, State *global_state) {
+    Type *te1 = get_exp_type(e1);
+    int e1num = gen_exp(e1, global_state);
+    int e2num = gen_exp(e2, global_state);
+
+    printf("%%e%d = ", ++(global_state->exp_count));
+    switch(etype) {
+        case SUM:
+            if (te1->single.type == FLOAT)
+                printf("fadd ");
+            else
+                printf("add nsw ");
+
+            break;
+        case SUB:
+            if (te1->single.type == FLOAT)
+                printf("fsub ");
+            else
+                printf("sub nsw ");
+
+            break;
+        case MUL:
+            if (te1->single.type == FLOAT)
+                printf("fmul ");
+            else
+                printf("mul nsw ");
+
+            break;
+        case DIV:
+            if (te1->single.type == FLOAT)
+                printf("fdiv ");
+            else
+                printf("sdiv ");
+            break;
+        default:
+            fprintf(stderr, "not implemented\n");
+            exit(-1);
+    }
+
+    if (te1->single.type == FLOAT)
+        printf("double %%e%d, %%e%d\n", e1num, e2num);
+    else
+        printf("i32 %%e%d, %%e%d\n", e1num, e2num);
+
+    return global_state->exp_count;
+}
+
 static int gen_exp(Exp *exp, State *global_state) {
     if( exp == NULL )
         return -1;
 
     switch( exp->tag ) {
+
+        case DIV:
+        case MUL:
+        case SUB:
+        case SUM:
+            return gen_arit_exp(exp->binary.e1, exp->binary.e2, exp->tag, global_state);
+        case EXPATT:
+            return gen_exp_att(exp->binary.e1, exp->binary.e2, global_state);
         case EXPINT:
             return gen_int(exp->expint.i, global_state);
         case EXPFLOAT:
@@ -150,13 +204,10 @@ static int gen_exp(Exp *exp, State *global_state) {
             return gen_int(exp->expchar.c, global_state);
         case EXPBOOL:
             return gen_bool(exp->expbool.b, global_state);
-        case EXPATT:
-            global_state->cur_line = exp->binary.line;
-            return gen_exp_att(exp->binary.e1, exp->binary.e2, global_state);
         case VARID:
             return gen_exp_varid(exp, global_state);
         default:
-            fprintf(stderr, "not implemented\n");
+            fprintf(stderr, "not implemented %d\n", exp->tag);
             exit(-1);
     }
 
