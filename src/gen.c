@@ -5,34 +5,26 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#define GENLOAD(t, name, is_global) \
-    printf("%%e%d = load ", ++(global_state->exp_count));   \
-    gen_type(t, false);                                     \
-    printf(", ");                                           \
-    gen_type(t, false);                                     \
-    printf("* ");                                           \
-    is_global ? printf("@") : printf("%%");                 \
-    printf("%s\n", name);
+static void gen_temporary_code(int expnum) {
+    printf("%%t%d", expnum);
+}
 
-#define GENSTORE(t, name, expnum, is_global )   \
-    printf("store ");                           \
-    gen_type(t, false);                         \
-    printf(" %%e%d, ", expnum);                 \
-    gen_type(t, false);                         \
-    printf("* ");                               \
-    is_global ? printf("@") : printf("%%");     \
-    printf("%s\n", name);
-
-#define PRINTEXPTYPE(t, tfmt, l, expnum)		\
-    printf("call i32 (i8*, ...) @printf( i8* getelementptr ([%d x i8], [%d x i8]*" \
-            "@fmt%s, i32 0, i32 0), %s %%e%d)\n", l, l, t, tfmt, expnum);
+static void gen_printf_call(char *t, char *tfmt, int sz, int expnum) {
+    printf("call i32 (i8*, ...) @printf( i8* getelementptr ([%d x i8],"
+            "[%d x i8]*  @fmt%s, i32 0, i32 0), %s ", sz, sz, t, tfmt);
+    gen_temporary_code(expnum);
+    printf(")\n");
+}
 
 #define GETEXPTYPE(exp)	\
-    (exp->tag == VARID) ? exp->var.def->type : get_exp_type(exp);
+    (((exp)->tag == VARID || (exp)->tag == VAR) ? (exp)->var.def->type :	\
+     get_exp_type((exp)));
 
 static void gen_native_type(Native_types type, bool is_seq) {
-    if (is_seq)
-        printf("*");
+    if (is_seq) {
+        fprintf(stderr, "not implemented\n");
+        exit(-1);
+    }
 
     switch( type ) {
         case CHAR:
@@ -63,22 +55,58 @@ static void gen_type(Type *type, bool is_seq) {
 
 }
 
+static void gen_pointer_reference(Type *t, bool is_global, char *name) {
+    gen_type(t, false);
+    printf("* ");
+    if (is_global)
+        printf("@");
+    else
+        printf("%%");
+
+    printf("%s\n", name);
+}
+
+static int get_new_temporary(State *global_state) {
+    return ++(global_state->temp_count);
+}
+
+static void gen_load(Type *t, char *name, bool is_global,
+        State *global_state) {
+    gen_temporary_code(get_new_temporary(global_state));
+    printf(" = load ");
+    gen_type(t, false);
+    printf(", ");
+    gen_pointer_reference(t, is_global, name);
+}
+
+static void gen_store(Type *t, char *name, bool is_global, int expnum) {
+    printf("store ");
+    gen_type(t, false);
+    printf(" ");
+    gen_temporary_code(expnum);
+    printf(", ");
+    gen_pointer_reference(t, is_global, name);
+}
+
 static int gen_exp(Exp *exp, State *global_state);
 static void gen_defs(Def *def, State *global_state, bool is_global);
 
 static int gen_int(int eint, State *global_state) {
-    printf("%%e%d = add i32 0, %d\n", ++(global_state->exp_count), eint);
-    return global_state->exp_count;
+    gen_temporary_code(get_new_temporary(global_state));
+    printf(" = add i32 0, %d\n", eint);
+    return global_state->temp_count;
 }
 
 static int gen_float(float efloat, State *global_state) {
-    printf("%%e%d = fadd double %e, %e\n", ++(global_state->exp_count), 0.0, efloat);
-    return global_state->exp_count;
+    gen_temporary_code(get_new_temporary(global_state));
+    printf(" = fadd double %e, %e\n", 0.0, efloat);
+    return global_state->temp_count;
 }
 
 static int gen_bool(bool ebool, State *global_state) {
-    printf("%%e%d = add i8  0, %d\n", ++(global_state->exp_count), ebool);
-    return global_state->exp_count;
+    gen_temporary_code(get_new_temporary(global_state));
+    printf(" = add i8  0, %d\n", ebool);
+    return global_state->temp_count;
 }
 
 static void gen_zero(Type *type) {
@@ -106,17 +134,17 @@ static int gen_exp_att(Exp *e1, Exp *e2, State *global_state) {
     int expnum = gen_exp(e2, global_state);
     Var *v = e1->var.def;
 
-    GENSTORE(v->type, v->name, expnum, v->is_global);
+    gen_store(v->type, v->name, v->is_global, expnum);
 
-    return global_state->exp_count;
+    return global_state->temp_count;
 }
 
 static int gen_exp_varid(Exp *exp, State *global_state) {
     Var *v = exp->var.def;
 
-    GENLOAD(v->type, v->name, v->is_global);
+    gen_load(v->type, v->name, v->is_global, global_state);
 
-    return global_state->exp_count;
+    return global_state->temp_count;
 }
 
 static void gen_ret() {
@@ -128,7 +156,9 @@ static void gen_retexp(Exp *exp, State *global_state) {
 
     printf("ret ");
     gen_type(global_state->cur_func_type, false);
-    printf(" %%e%d\n", numexp);
+    printf(" ");
+    gen_temporary_code(numexp);
+    printf("\n");
 
 }
 
@@ -137,7 +167,8 @@ static int gen_arit_exp(Exp *e1, Exp *e2, Exp_type etype, State *global_state) {
     int e1num = gen_exp(e1, global_state);
     int e2num = gen_exp(e2, global_state);
 
-    printf("%%e%d = ", ++(global_state->exp_count));
+    gen_temporary_code(get_new_temporary(global_state));
+    printf(" = ");
     switch(etype) {
         case SUM:
             if (te1->single.type == FLOAT)
@@ -171,17 +202,25 @@ static int gen_arit_exp(Exp *e1, Exp *e2, Exp_type etype, State *global_state) {
             exit(-1);
     }
 
-    if (te1->single.type == FLOAT)
-        printf("double %%e%d, %%e%d\n", e1num, e2num);
-    else
-        printf("i32 %%e%d, %%e%d\n", e1num, e2num);
+    if (te1->single.type == FLOAT) {
+        printf("double ");
+    } else {
+        printf("i32 ");
+    }
 
-    return global_state->exp_count;
+    gen_temporary_code(e1num);
+    printf(",");
+    gen_temporary_code(e2num);
+    printf("\n");
+
+    return global_state->temp_count;
 }
 
 static int gen_exp(Exp *exp, State *global_state) {
-    if( exp == NULL )
-        return -1;
+    if( exp == NULL ) {
+        fprintf(stderr, "error\n");
+        exit(-1);
+    }
 
     switch( exp->tag ) {
 
@@ -189,7 +228,8 @@ static int gen_exp(Exp *exp, State *global_state) {
         case MUL:
         case SUB:
         case SUM:
-            return gen_arit_exp(exp->binary.e1, exp->binary.e2, exp->tag, global_state);
+            return gen_arit_exp(exp->binary.e1, exp->binary.e2, exp->tag,
+                    global_state);
         case EXPATT:
             return gen_exp_att(exp->binary.e1, exp->binary.e2, global_state);
         case EXPINT:
@@ -206,8 +246,6 @@ static int gen_exp(Exp *exp, State *global_state) {
             fprintf(stderr, "not implemented %d\n", exp->tag);
             exit(-1);
     }
-
-    return 0;
 }
 
 static void gen_print(Exp *exp, State *global_state) {
@@ -217,16 +255,16 @@ static void gen_print(Exp *exp, State *global_state) {
     if (exptype->tag == SINGLE) {
         switch(exptype->single.type) {
             case CHAR:
-                PRINTEXPTYPE("char", "i32", 4, expnum);
+                gen_printf_call("char", "i32", 4, expnum);
                 break;
             case INT:
-                PRINTEXPTYPE("int", "i32", 4, expnum);
+                gen_printf_call("int", "i32", 4, expnum);
                 break;
             case FLOAT:
-                PRINTEXPTYPE("float", "double", 6, expnum);
+                gen_printf_call("float", "double", 6, expnum);
                 break;
             case BOOL:
-                PRINTEXPTYPE("bool", "i8", 6, expnum);
+                gen_printf_call("bool", "i8", 6, expnum);
                 break;
             default:
                 fprintf(stderr, "not implemented %d\n", exptype->single.type);
@@ -273,26 +311,27 @@ static void gen_stat(Stat *stat, State *global_state) {
     }
 
     gen_defs(stat->vars, global_state, false);
-    gen_cmd( stat->cmds, global_state);
+    gen_cmd(stat->cmds, global_state);
 }
 
-static void gen_var(Def *var, bool is_global) {
-    if (var == NULL)
-        return;
-
+static void gen_global_var(Def *var) {
     Var *v = var->var.def;
-    if (is_global) {
-        printf("@%s = global ", v->name);
-        gen_type(v->type, false);
-        printf(" ");
-        gen_zero(v->type);
-        printf("\n");
-        v->is_global = is_global;
-    } else {
-        printf("%%%s = alloca ", v->name);
-        gen_type(v->type, false);
-        printf("\n");
-    }
+
+    printf("@%s = global ", v->name);
+    gen_type(v->type, false);
+    printf(" ");
+    gen_zero(v->type);
+    printf("\n");
+    v->is_global = true;
+}
+
+static void gen_local_var(Def *var) {
+    Var *v = var->var.def;
+
+    printf("%%%s = alloca ", v->name);
+    gen_type(v->type, false);
+    printf("\n");
+
 }
 
 static void gen_func(Def *dfunc, State *global_state) {
@@ -327,7 +366,7 @@ static void gen_defs(Def *def, State *global_state, bool is_global) {
 
     switch (def->tag) {
         case DEFVAR:
-            gen_var(def, is_global);
+            is_global ? gen_global_var(def) : gen_local_var(def);
             gen_defs(def->var.next, global_state, is_global);
             break;
         case DEFFUNC:

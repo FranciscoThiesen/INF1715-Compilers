@@ -9,7 +9,7 @@ struct state {
     Type *cur_func_type;
     char *cur_func_name;
     int cur_line;
-    int exp_count;
+    int temp_count;
 };
 
 extern bool type_tree();
