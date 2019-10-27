@@ -491,7 +491,7 @@ static Type *get_arit_type(Exp *father, Exp *e1, Exp *e2) {
 
 }
 
-static Type *get_exp_typevar( Exp *e1, Exp *e2) {
+static Type *get_exp_var( Exp *e1, Exp *e2) {
     Type *t1, *t2;
 
     t1 = get_exp_type( e1 );
@@ -547,7 +547,7 @@ Type *get_exp_type( Exp *exp ) {
     if( exp != NULL ) {
         switch( exp->tag ) {
             case VAR:
-                return get_exp_typevar( exp->binary.e1, exp->binary.e2 );
+                return get_exp_var( exp->binary.e1, exp->binary.e2 );
             case VARID:
                 return get_exp_varid( exp );
             case CALLEXP:
