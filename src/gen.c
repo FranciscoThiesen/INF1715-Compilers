@@ -19,13 +19,18 @@
     gen_type(t, false);             \
     printf("* @%s\n", name);
 
+#define PRINTEXPTYPE(t, tfmt, l, expnum)		\
+    printf("call i32 (i8*, ...) @printf( i8* getelementptr ([%d x i8], [%d x i8]*" \
+            "@fmt%s, i32 0, i32 0), %s %%e%d)\n", l, l, t, tfmt, expnum);
+
+
 static void gen_native_type(Native_types type, bool is_seq) {
     if (is_seq)
         printf("*");
 
     switch( type ) {
-        case INT:
         case CHAR:
+        case INT:
             printf("i32");
             break;
         case FLOAT:
@@ -61,6 +66,11 @@ static int gen_int(int eint, State *global_state) {
 
 static int gen_float(float efloat, State *global_state) {
     printf("%%e%d = fadd double %e, %e\n", ++(global_state->exp_count), 0.0, efloat);
+    return global_state->exp_count;
+}
+
+static int gen_bool(bool ebool, State *global_state) {
+    printf("%%e%d = add i8  0, %d\n", ++(global_state->exp_count), ebool);
     return global_state->exp_count;
 }
 
@@ -127,7 +137,6 @@ static void gen_retexp(Exp *exp, State *global_state) {
 
 }
 
-
 static int gen_exp(Exp *exp, State *global_state) {
     if( exp == NULL )
         return -1;
@@ -137,22 +146,21 @@ static int gen_exp(Exp *exp, State *global_state) {
             return gen_int(exp->expint.i, global_state);
         case EXPFLOAT:
             return gen_float(exp->expfloat.f, global_state);
+        case EXPCHAR:
+            return gen_int(exp->expchar.c, global_state);
+        case EXPBOOL:
+            return gen_bool(exp->expbool.b, global_state);
         case EXPATT:
             global_state->cur_line = exp->binary.line;
             return gen_exp_att(exp->binary.e1, exp->binary.e2, global_state);
         case VARID:
             return gen_exp_varid(exp, global_state);
-        case RET:
-            gen_ret();
-            break;
-        case RETEXP:
-            gen_retexp(exp, global_state);
-            break;
         default:
             fprintf(stderr, "not implemented\n");
             exit(-1);
     }
 
+    return 0;
 }
 
 static void gen_print(Exp *exp, State *global_state) {
@@ -161,13 +169,17 @@ static void gen_print(Exp *exp, State *global_state) {
 
     if (exptype->tag == SINGLE) {
         switch(exptype->single.type) {
+            case CHAR:
+                PRINTEXPTYPE("char", "i32", 4, expnum);
+                break;
             case INT:
-                printf("call i32 (i8*, ...) @printf( i8* getelementptr ([4 x i8], [4 x i8]*"
-                        "@fmtint, i32 0, i32 0), i32 %%e%d)\n", expnum);
+                PRINTEXPTYPE("int", "i32", 4, expnum);
                 break;
             case FLOAT:
-                printf("call i32 (i8*, ...) @printf( i8* getelementptr ([6 x i8], [6 x i8]*"
-                        "@fmtfloat, i32 0, i32 0), double %%e%d)\n", expnum);
+                PRINTEXPTYPE("float", "double", 6, expnum);
+                break;
+            case BOOL:
+                PRINTEXPTYPE("bool", "i8", 6, expnum);
                 break;
             default:
                 fprintf(stderr, "not implemented\n");
@@ -280,6 +292,8 @@ static void gen_defs(Def *def, State *global_state) {
 void gen_code(State *global_state) {
     printf("@fmtint = internal constant [4 x i8] c\"%%d\\0A\\00\"\n");
     printf("@fmtfloat = internal constant [6 x i8] c\"%%.7f\\0A\\00\"\n");
+    printf("@fmtbool = internal constant [6 x i8] c\"%%hhx\\0A\\00\"\n");
+    printf("@fmtchar = internal constant [4 x i8] c\"%%c\\0A\\00\"\n");
     printf("declare i32 @printf(i8*, ...)\n");
     gen_defs(GLOBAL_TREE, global_state);
 }
