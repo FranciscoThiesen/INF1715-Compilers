@@ -1,19 +1,22 @@
-#!/bin/bash
-#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
-
 FILES=*.monga
 PASSED=true
 
 for FILE in $FILES
 do
     NAME=$(basename $FILE .monga)
-    ../src/mongac -o $NAME.o $FILE 2> $NAME.o
+	../src/mongac -o $NAME.ll $FILE
+	llc -o $NAME.s $NAME.ll
+	gcc -Wall $NAME.s -fno-pie -no-pie
+	./a.out > $NAME.o
     if ! diff $NAME.ans $NAME.o
     then
-        echo "file generated from $FILE differs from answer"
+        echo "output found in $FILE differ from answer"
         PASSED=false
     fi
-    rm $NAME.o
+    rm $NAME.s
+    rm $NAME.ll
+	rm $NAME.o
+	rm a.out
 done
 
 if $PASSED

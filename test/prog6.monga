@@ -1,7 +1,0 @@
-# Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
-
-main() : int {
-    i : [float];
-
-	i = new char[20];
-}

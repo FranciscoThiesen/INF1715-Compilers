@@ -1,12 +1,14 @@
 #Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
+i : int;
+f : float;
+
 main() : int {
-    # nao deveria funcionar
-    i : int;
+    #observando comportamento de cast
     i = 10;
-    while( i ) {
-        i = i - 1;
-        @i;
-    }
+    f = 3.4;
+    @f;
+    @i;
+
     return 0;
 }
