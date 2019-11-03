@@ -1,0 +1,13 @@
+#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+
+x : float;
+
+main() : int {
+    x = 193;
+    @x;
+    x = 13;
+    @x;
+    x = 3.1415;
+    @x;
+    return 42;
+}

@@ -1,0 +1,15 @@
+#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+
+char : c;
+
+main() : int {
+    #vendo comportamento de char
+    c = 14;
+    @c;
+    return 8;
+}
+
+memo() {
+    #vendo comportamento de casts 
+    c = 18.4;
+}
