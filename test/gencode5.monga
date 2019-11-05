@@ -1,0 +1,9 @@
+#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+
+main() : int {
+    @ 1e13;
+    @ 1e-1;
+    @ 0x1.p-3;
+    @ 0x3f3f3f3f;
+    return 0;
+}
