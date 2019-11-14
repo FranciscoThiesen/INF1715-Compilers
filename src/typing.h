@@ -14,6 +14,5 @@ struct state {
 
 extern bool type_tree();
 extern State * global_state;
-extern Type *get_exp_type(Exp *exp);
 
 #endif

@@ -316,6 +316,8 @@ static Type *get_bin_logical( Exp *father, Exp *e1, Exp *e2 ) {
     if (!is_bool(t2) || is_array(t2)) {
         CAST(father, eaux2, binary, e2, tbool);
     } 
+
+    father->binary.exptype = tbool;
     return tbool;
 }
 
@@ -332,6 +334,8 @@ static Type *get_not( Exp *father, Exp *e1 ) {
     if (!is_bool(t1) || is_array(t1)) {
         CAST(father, eaux, binary, e1, tbool);
     }
+
+    father->unary.exptype = tbool;
     return tbool;
 }
 
@@ -364,6 +368,7 @@ static Type *get_equality_exp( Exp *father, Exp *e1, Exp *e2 ) {
         return newtype(ERROR);
     }
 
+    father->binary.exptype = tbool;
     if (is_float(t1) && (is_numeral(t2) || is_bool(t2)))  {
         CAST(father, eaux, binary, e2, t1);
         return tbool;
@@ -476,17 +481,22 @@ static Type *get_arit_type(Exp *father, Exp *e1, Exp *e2) {
         accepted = false;
         return newtype(ERROR);
     }
-    if( compare_type(t1, t2) ) return t1;
+    if( compare_type(t1, t2) ) {
+        father->binary.exptype = t1;
+        return t1;
+    }
 
     // (int, int) -> int, (float, float) -> float   
     // cast t1 to float
 
     if(is_int(t1)) {
         CAST(father, eaux, binary, e1, t2)
-            return t2;
+        father->binary.exptype = t2;
+        return t2;
     } else {
         CAST(father, eaux, binary, e2, t1)
-            return t1;
+        father->binary.exptype = t1;
+        return t1;
     }
 
 }
@@ -540,6 +550,8 @@ static Type *get_minus( Exp *father, Exp *e1 ) {
         CAST(father, eaux, binary, e1, t1)
     }
 
+
+    father->unary.exptype = t1;
     return t1;
 }
 

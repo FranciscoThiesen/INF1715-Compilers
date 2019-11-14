@@ -1,11 +1,11 @@
 #Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
 main() : int {
-	a : float;
-	b : int;
+	a : bool;
+	b : bool;
 	c : bool;
-	a = 0.0;
-	b = 0x3f3f3f3f;
+	a = false;
+	b = true;
 	c = false;
 
 	@ (a && c);

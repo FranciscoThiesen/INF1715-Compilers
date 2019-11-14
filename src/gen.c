@@ -16,9 +16,33 @@ static void gen_printf_call(char *t, char *tfmt, int sz, int expnum) {
     printf(")\n");
 }
 
-#define GETEXPTYPE(exp)	\
-    (((exp)->tag == VARID || (exp)->tag == VAR) ? (exp)->var.def->type :	\
-     get_exp_type((exp)));
+static Type *get_exp_type_internal(Exp *exp) {
+    switch(exp->tag) {
+        case VARID:
+        case VAR:
+            return exp->var.def->type;
+        case EXPCHAR:
+            return exp->expchar.type;
+        case EXPINT:
+            return exp->expint.type;
+        case EXPFLOAT:
+            return exp->expfloat.type;
+        case EXPBOOL:
+            return exp->expbool.type;
+        case SUM:
+        case SUB:
+        case MUL:
+        case DIV:
+        case OR:
+        case AND:
+            return exp->binary.exptype;
+        case NOT:
+            return exp->unary.exptype;
+        default:
+            fprintf(stderr, "not implemented %d\n", exp->tag);
+            exit(-1);
+    }
+}
 
 static void gen_native_type(Native_types type, bool is_seq) {
     if (is_seq) {
@@ -162,8 +186,8 @@ static void gen_retexp(Exp *exp, State *global_state) {
 
 }
 
-static int gen_arit_exp(Exp *e1, Exp *e2, Exp_type etype, State *global_state) {
-    Type *te1 = GETEXPTYPE(e1);
+static int gen_binary_exp(Exp *e1, Exp *e2, Exp_type etype, State *global_state) {
+    Type *te1 = get_exp_type_internal(e1);
     int e1num = gen_exp(e1, global_state);
     int e2num = gen_exp(e2, global_state);
 
@@ -197,21 +221,59 @@ static int gen_arit_exp(Exp *e1, Exp *e2, Exp_type etype, State *global_state) {
             else
                 printf("sdiv ");
             break;
+        case OR:
+            printf("or ");
+            break;
+        case AND:
+            printf("and ");
+            break;
+        case NEQ:
+            printf("ne ");
+            break;
+        case EQ:
+            printf("eq ");
+            break;
         default:
             fprintf(stderr, "not implemented\n");
             exit(-1);
     }
 
-    if (te1->single.type == FLOAT) {
-        printf("double ");
-    } else {
-        printf("i32 ");
-    }
+    gen_type(te1, false );
 
+    printf(" ");
     gen_temporary_code(e1num);
-    printf(",");
+    printf(", ");
     gen_temporary_code(e2num);
     printf("\n");
+
+    return global_state->temp_count;
+}
+
+static int gen_unary_type(Exp *e1, Exp_type etype, State *global_state) {
+    int e1num = gen_exp(e1, global_state);
+
+    gen_temporary_code(get_new_temporary(global_state));
+    printf(" = ");
+    switch(etype) {
+        case NOT:
+            printf("icmp ne i8 ");
+            gen_temporary_code(e1num);
+            printf(", 0\n");
+            gen_temporary_code(get_new_temporary(global_state));
+            printf(" = ");
+            printf("xor i1 ");
+            gen_temporary_code(global_state->temp_count - 1);
+            printf(", true\n");
+            gen_temporary_code(get_new_temporary(global_state));
+            printf(" = ");
+            printf("zext i1 ");
+            gen_temporary_code(global_state->temp_count - 1);
+            printf(" to i8\n");
+            break;
+        default:
+            fprintf(stderr, "not implemented\n");
+            exit(-1);
+    }
 
     return global_state->temp_count;
 }
@@ -223,13 +285,15 @@ static int gen_exp(Exp *exp, State *global_state) {
     }
 
     switch( exp->tag ) {
-
         case DIV:
         case MUL:
         case SUB:
         case SUM:
-            return gen_arit_exp(exp->binary.e1, exp->binary.e2, exp->tag,
-                    global_state);
+        case OR:
+        case AND:
+            return gen_binary_exp(exp->binary.e1, exp->binary.e2, exp->tag, global_state);
+        case NOT:
+            return gen_unary_type(exp->unary.exp, exp->tag, global_state);
         case EXPATT:
             return gen_exp_att(exp->binary.e1, exp->binary.e2, global_state);
         case EXPINT:
@@ -243,14 +307,14 @@ static int gen_exp(Exp *exp, State *global_state) {
         case VARID:
             return gen_exp_varid(exp, global_state);
         default:
-            fprintf(stderr, "not implemented %d\n", exp->tag);
+            fprintf(stderr, "not implemented: %d\n", exp->tag);
             exit(-1);
     }
 }
 
 static void gen_print(Exp *exp, State *global_state) {
     int expnum = gen_exp(exp, global_state);
-    Type *exptype = GETEXPTYPE(exp);
+    Type *exptype = get_exp_type_internal(exp);
 
     if (exptype->tag == SINGLE) {
         switch(exptype->single.type) {
@@ -299,7 +363,7 @@ static void gen_cmd( Cmd *cmd, State *global_state ) {
             gen_cmd(cmd->cmd_ret_exp.next, global_state);
             break;
         default:
-            fprintf(stderr, "not implemented %d\n", cmd->tag);
+            fprintf(stderr, "not implemented: %d\n", cmd->tag);
             exit(-1);
     }
 
@@ -331,7 +395,6 @@ static void gen_local_var(Def *var) {
     printf("%%%s = alloca ", v->name);
     gen_type(v->type, false);
     printf("\n");
-
 }
 
 static void gen_func(Def *dfunc, State *global_state) {
