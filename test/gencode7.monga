@@ -1,0 +1,18 @@
+#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+
+main() : int {
+	a : float;
+	b : int;
+	c : bool;
+	a = 0.0;
+	b = 0x3f3f3f3f;
+	c = false;
+
+	@ (a && c);
+	@ (a || c);
+	@ (b && c);
+	@ (b || c);
+
+	return 2;
+
+}
