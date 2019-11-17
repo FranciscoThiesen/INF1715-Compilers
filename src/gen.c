@@ -34,12 +34,18 @@ static Type *get_exp_type_internal(Exp *exp) {
         case MUL:
         case DIV:
         case OR:
+        case NEQ:
+        case EQ:
+        case GEQ:
+        case LEQ:
+        case L:
+        case G:
         case AND:
             return exp->binary.exptype;
         case NOT:
             return exp->unary.exptype;
         default:
-            fprintf(stderr, "not implemented %d\n", exp->tag);
+            fprintf(stderr, "not implemented: %d\n", exp->tag);
             exit(-1);
     }
 }
@@ -63,7 +69,7 @@ static void gen_native_type(Native_types type, bool is_seq) {
             break;
         default:
             break;
-    }	
+    }
 }
 
 static void gen_type(Type *type, bool is_seq) {
@@ -186,6 +192,14 @@ static void gen_retexp(Exp *exp, State *global_state) {
 
 }
 
+static void gen_ext_i1_to_i8(State *global_state) {
+        gen_temporary_code(get_new_temporary(global_state));
+        printf(" = ");
+        printf("zext i1 ");
+        gen_temporary_code(global_state->temp_count - 1);
+        printf(" to i8\n");
+}
+
 static int gen_binary_exp(Exp *e1, Exp *e2, Exp_type etype, State *global_state) {
     Type *te1 = get_exp_type_internal(e1);
     int e1num = gen_exp(e1, global_state);
@@ -228,10 +242,40 @@ static int gen_binary_exp(Exp *e1, Exp *e2, Exp_type etype, State *global_state)
             printf("and ");
             break;
         case NEQ:
-            printf("ne ");
+            if (te1->single.type == FLOAT)
+                printf("fcmp one ");
+            else
+                printf("icmp ne ");
             break;
         case EQ:
-            printf("eq ");
+            if (te1->single.type == FLOAT)
+                printf("fcmp oeq ");
+            else
+                printf("icmp eq ");
+            break;
+        case G:
+            if (te1->single.type == FLOAT)
+                printf("fcmp ogt ");
+            else
+                printf("icmp sgt ");
+            break;
+        case L:
+            if (te1->single.type == FLOAT)
+                printf("fcmp olt ");
+            else
+                printf("icmp slt "); 
+            break;
+        case GEQ:
+            if (te1->single.type == FLOAT)
+                printf("fcmp oge ");
+            else
+                printf("icmp sge "); 
+            break;
+        case LEQ:
+            if (te1->single.type == FLOAT)
+                printf("fcmp ole ");
+            else
+                printf("icmp sle "); 
             break;
         default:
             fprintf(stderr, "not implemented\n");
@@ -245,6 +289,20 @@ static int gen_binary_exp(Exp *e1, Exp *e2, Exp_type etype, State *global_state)
     printf(", ");
     gen_temporary_code(e2num);
     printf("\n");
+
+    switch(etype) {
+        case NEQ:
+        case EQ:
+        case G:
+        case L:
+        case GEQ:
+        case LEQ:
+            gen_ext_i1_to_i8(global_state);
+            break;
+        default:
+            //noop
+            break;
+    }
 
     return global_state->temp_count;
 }
@@ -264,11 +322,7 @@ static int gen_unary_type(Exp *e1, Exp_type etype, State *global_state) {
             printf("xor i1 ");
             gen_temporary_code(global_state->temp_count - 1);
             printf(", true\n");
-            gen_temporary_code(get_new_temporary(global_state));
-            printf(" = ");
-            printf("zext i1 ");
-            gen_temporary_code(global_state->temp_count - 1);
-            printf(" to i8\n");
+            gen_ext_i1_to_i8(global_state);
             break;
         default:
             fprintf(stderr, "not implemented\n");
@@ -290,6 +344,12 @@ static int gen_exp(Exp *exp, State *global_state) {
         case SUB:
         case SUM:
         case OR:
+        case NEQ:
+        case EQ:
+        case GEQ:
+        case LEQ:
+        case L:
+        case G:
         case AND:
             return gen_binary_exp(exp->binary.e1, exp->binary.e2, exp->tag, global_state);
         case NOT:

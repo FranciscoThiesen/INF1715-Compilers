@@ -1,0 +1,15 @@
+#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+
+main() : int {
+	a : bool;
+    b : bool;	
+    a = false;
+    b = true;
+	@ ( a );
+	@ ( !a );
+    @ ( !( a || b ) );
+    @ ( !( a && !b) );
+    @ ( !!a );
+    @ ( !!!!a && (b || !b) );
+    return 13;
+}

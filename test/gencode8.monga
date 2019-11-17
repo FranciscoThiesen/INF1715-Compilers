@@ -1,0 +1,9 @@
+#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+
+main() : int {
+	a : bool;
+	a = false;
+	@ ( a );
+	@ ( !a );
+    return 19;
+}

@@ -1,6 +1,5 @@
 #Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
 
-#Testando cast de float pra bool e testando todos os operadores logicos
 main() : int {
 	a : bool;
 	b : bool;

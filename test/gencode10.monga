@@ -1,0 +1,38 @@
+#Victor Nogueira - 1511043 & Francisco Thiesen - 1611854
+
+main() : int {
+	a : bool;
+    b : bool;
+    c : int;
+    d : int;
+    e : float;
+    f : float;
+    g : char;
+    h : char;
+    i : bool;
+
+    g = 'a';
+    h = 'A';
+    e = 0.25;
+    f = 0.25;
+    d = 5;
+    c = 15;
+    a = false;
+    b = true;
+	@ ( a ~= b );
+    @ ( a == b );
+    @ ( c ~= d );
+    @ ( c == d );
+    @ ( e ~= f );
+    @ ( e == f );
+    @ ( g == h );
+    @ ( g ~= h );
+    @ ( c <= (d * 3) );
+    @ ( c <= (d * 3) + 1 );
+    @ ( c <= (d * 3) - 1 );
+    
+    i = c ~= d;
+    @i;
+    
+    return 0;
+}

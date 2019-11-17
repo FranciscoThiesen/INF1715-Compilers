@@ -351,6 +351,7 @@ static Type *get_equality_exp( Exp *father, Exp *e1, Exp *e2 ) {
 
     tbool = newtype(BOOL);
     if (compare_type(t1, t2)) {
+        father->binary.exptype = tbool;
         return tbool;
     }
 
@@ -427,6 +428,7 @@ static Type *get_compare_exp( Exp *father, Exp *e1, Exp *e2 ) {
         return newtype(ERROR);
     }
 
+    father->binary.exptype = tbool;
     if (is_float(t1) && (is_numeral(t2) || is_bool(t2)))  {
         CAST(father, eaux, binary, e2, t1);
         return tbool;
