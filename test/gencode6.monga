@@ -2,10 +2,10 @@
 
 #Testando cast de float pra bool e testando todos os operadores logicos
 main() : int {
-	a : float;
-	b : float;
-	a = 0;
-	b = 1;
+	a : bool;
+	b : bool;
+	a = false;
+	b = true;
 	@ ( a && b );
 	@ ( a && a );
 	@ ( b && b );

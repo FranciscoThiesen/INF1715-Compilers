@@ -92,6 +92,7 @@ union exp {
         Exp_type tag;
         char *name;
         Var *def;
+        Type *exptype;
     } var;
     struct {
         Exp_type tag;
@@ -117,11 +118,13 @@ union exp {
         Exp *e1;
         Exp *e2;
         int line;
+        Type *exptype;
     } binary;
     struct {
         Exp_type tag;
         Exp *exp;
         int line;
+        Type *exptype;
     } unary;
     struct {
         Exp_type tag;
