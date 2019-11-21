@@ -5,8 +5,8 @@ for FILE in $FILES
 do
     NAME=$(basename $FILE .monga)
 	../src/mongac -o $NAME.ll $FILE
-	llc -o $NAME.s $NAME.ll
-	gcc -Wall $NAME.s -fno-pie -no-pie
+	llc-mp-5.0 -o $NAME.s $NAME.ll
+	gcc -Wall $NAME.s -fno-pie
 	./a.out > $NAME.o
     if ! diff $NAME.ans $NAME.o
     then

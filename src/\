@@ -43,7 +43,7 @@ static Type *get_exp_type_internal(Exp *exp) {
         case AND:
             return exp->binary.exptype;
         case NOT:
-        case MINUS:
+        case MINUS;
             return exp->unary.exptype;
         default:
             fprintf(stderr, "not implemented: %d\n", exp->tag);
@@ -328,14 +328,13 @@ static int gen_unary_type(Exp *e1, Exp_type etype, State *global_state) {
             gen_ext_i1_to_i8(global_state);
             break;
         case MINUS:
-            if( te1->single.type == FLOAT ) printf("f");
+            if( te1->single.type == FLOAT ) {
+                printf("f");
+            }
 
             printf("sub ");
             gen_type(te1, false);
-            printf(" 0, ");
-            gen_temporary_code(global_state->temp_count - 1);
-            printf("\n");
-            break;
+            printf(""§);
         default:
             fprintf(stderr, "not implemented\n");
             exit(-1);
@@ -365,7 +364,6 @@ static int gen_exp(Exp *exp, State *global_state) {
         case AND:
             return gen_binary_exp(exp->binary.e1, exp->binary.e2, exp->tag, global_state);
         case NOT:
-        case MINUS:
             return gen_unary_type(exp->unary.exp, exp->tag, global_state);
         case EXPATT:
             return gen_exp_att(exp->binary.e1, exp->binary.e2, global_state);

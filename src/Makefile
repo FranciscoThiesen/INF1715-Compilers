@@ -25,7 +25,7 @@ $(LEXSRC): $(LEXFILE)
 	lex --header-file=lex.yy.h $<
 
 $(BISONSRC): $(BISONFILE)
-	bison -d $<
+	/usr/local/opt/bison/bin/bison -d $<
 
 clean:
 	$(RM) $(LEXSRC) lex.yy.h $(BISONSRC) monga.tab.h $(MONGAC)
