@@ -470,6 +470,13 @@ static void gen_local_var(Def *var) {
     printf("\n");
 }
 
+static void gen_params(Def *params, State *global_state) {
+    if( params != NULL ) {
+        fprintf(stderr, "not implemented\n");
+        exit(-1);
+    }
+}
+
 static void gen_func(Def *dfunc, State *global_state) {
     Func *f;
 
@@ -479,6 +486,8 @@ static void gen_func(Def *dfunc, State *global_state) {
     f = dfunc->func.def;
     if (f == NULL)
         return;
+     
+    gen_params(f->param, global_state );
 
     global_state->cur_line = f->line;
 
