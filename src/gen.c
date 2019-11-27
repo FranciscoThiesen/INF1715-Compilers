@@ -101,6 +101,16 @@ static int get_new_temporary(State *global_state) {
     return ++(global_state->temp_count);
 }
 
+static int copy_var_address(char *name, bool is_global, 
+        State *global_state) {
+    gen_temporary_code( get_new_temporary(global_state));
+    printf(" = ");
+    if(is_global) printf("@");
+    else printf("%%");
+    printf("%s\n", name);
+    return global_state->temp_count;
+}
+
 static void gen_load(Type *t, char *name, bool is_global,
         State *global_state) {
     gen_temporary_code(get_new_temporary(global_state));
@@ -110,14 +120,26 @@ static void gen_load(Type *t, char *name, bool is_global,
     gen_pointer_reference(t, is_global, name);
 }
 
-static void gen_store(Type *t, char *name, bool is_global, int expnum) {
+static void gen_store(Type* t, int address_temporary, int expnum) {
+    printf("store ");
+    gen_type(t, false); 
+    printf(" ");
+    gen_temporary_code(expnum);
+    printf(", ");
+    gen_type(t, false);
+    printf("* ");
+    gen_temporary_code(address_temporary);
+    printf("\n");
+}
+
+/*static void gen_store(Type *t, char *name, bool is_global, int expnum) {
     printf("store ");
     gen_type(t, false);
     printf(" ");
     gen_temporary_code(expnum);
     printf(", ");
     gen_pointer_reference(t, is_global, name);
-}
+}*/
 
 static int gen_exp(Exp *exp, State *global_state);
 static void gen_defs(Def *def, State *global_state, bool is_global);
@@ -164,8 +186,10 @@ static void gen_zero(Type *type) {
 static int gen_exp_att(Exp *e1, Exp *e2, State *global_state) {
     int expnum = gen_exp(e2, global_state);
     Var *v = e1->var.def;
-
-    gen_store(v->type, v->name, v->is_global, expnum);
+    int varnum = copy_var_address(v->name, v->is_global, global_state);
+    
+    gen_store(v->type, varnum, expnum);
+    //gen_store(v->type, v->name, v->is_global, expnum);
 
     return global_state->temp_count;
 }
