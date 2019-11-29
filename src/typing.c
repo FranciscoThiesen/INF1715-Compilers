@@ -88,9 +88,11 @@ static void type_var( Def *dvar ) {
 
     global_state->cur_line = v->line;
     ok = insert_var(v);
-    if (!ok)
-        fprintf(stderr, "redefinition of var %s in line %d\n",
+    if (!ok) {
+        fprintf(stderr, "error: redefinition of var %s in line %d\n",
                 v->name, global_state->cur_line);
+        accepted = false;
+    }
 }
 static void type_params( Def* dparam ) {
     bool ok;
@@ -105,7 +107,7 @@ static void type_params( Def* dparam ) {
 
     ok = insert_var(param);
     if (!ok)
-        fprintf(stderr, "redefinition of parameter %s in line %d\n",
+        fprintf(stderr, "error: redefinition of parameter %s in line %d\n",
                 param->name, global_state->cur_line);
 
     type_params( dparam->var.next );
@@ -227,8 +229,21 @@ static Type *get_as( Exp *exp, Type *type) {
 
 static Type *get_var_type( Var **v )  {
     bool error;
+    Var *newvar = get_var( (*v)->name, &error);
 
-    Var *newvar = get_var( (*v)->name, &error );
+    if (error) {
+        fprintf(stderr, "error: expected symbol %s to be a variable"
+                " in line %d\n", (*v)->name, global_state->cur_line);
+        accepted = false;
+        return newtype(ERROR);
+    }
+
+    if (!newvar) {
+        fprintf(stderr, "error: use of undeclared identifier %s\n", (*v)->name);
+        accepted = false;
+        return newtype(ERROR);
+    }
+
     *v = newvar;
     return (*v)->type;
 }
@@ -324,7 +339,6 @@ static Type *get_bin_logical( Exp *father, Exp *e1, Exp *e2 ) {
     t2 = get_exp_type( e2 );
     if(is_error(t1) || is_error(t2))
         return newtype(ERROR);
-
 
     tbool = newtype(BOOL);
     if (is_array(t1) || is_array(t2)) {
@@ -560,7 +574,6 @@ static Type *get_minus( Exp *father, Exp *e1 ) {
         CAST(father, eaux, binary, e1, t1)
     }
 
-
     father->unary.exptype = t1;
     return t1;
 }
@@ -676,13 +689,9 @@ static void type_else( Stat *stat ) {
     if (stat)     type_stat( stat );
 }
 
-
 static void type_ifelse ( Cmd *father, Exp *exp, Stat *stat, Stat *stat2 ) {
     type_if( father, exp, stat );
     type_else( stat2 );
-}
-
-static void type_ret () {
 }
 
 static void get_retexp( Cmd *father, Exp *exp ) {
@@ -782,7 +791,6 @@ static void type_cmd( Cmd *cmd ) {
             break;
         case RET:
             global_state->cur_line = cmd->cmd_ret.line;
-            type_ret();
             type_cmd( cmd->cmd_ret.next );
             break;
         case RETEXP:
@@ -843,9 +851,11 @@ static void type_func( Def *dfunc) {
 
     global_state->cur_line = f->line;
     ok = insert_func(f);
-    if (!ok)
-        fprintf(stderr, "redefinition of function %s in line %d\n",
+    if (!ok) {
+        fprintf(stderr, "error: redefinition of function %s in line %d\n",
                 f->name, global_state->cur_line);
+        accepted = false;
+    }
 
     global_state->cur_func_type = f->type; 
     global_state->cur_func_name = f->name;

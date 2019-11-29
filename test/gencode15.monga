@@ -1,0 +1,23 @@
+main() : int {
+    a : bool;
+    b : bool;
+    c : bool;
+
+    a = true;
+    b = true;
+    c = false;
+    if (a && b || c) {
+        if (a) {
+            @a;
+        }
+        if (c) {
+            @b;
+        } else {
+            @24;
+        }
+    } else {
+        @b;
+    }
+
+    return 0;
+}

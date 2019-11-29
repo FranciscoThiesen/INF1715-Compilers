@@ -4,9 +4,21 @@
 #include "aux.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdarg.h>
 
 static void gen_temporary_code(int expnum) {
     printf("%%t%d", expnum);
+}
+
+static int get_new_label(State *global_state) {
+    return ++(global_state->label_count);
+}
+
+static void copylabel(char *buffer, char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vsprintf(buffer, fmt, args);
+    va_end(args);
 }
 
 static int get_type_size(Type *t) {
@@ -207,13 +219,96 @@ static int copy_var_address(Type *type, char *name, bool is_global,
     return global_state->temp_count;
 }
 
+static void gen_conditional_jump(char *lf, char *lt, State *global_state) {
+    printf("br i1 ");
+    gen_temporary_code(global_state->temp_count);
+    printf(", label %s, label %s\n", lf, lt);
+}
+
+static int gen_cond(Exp *e, char *lt, char *lf, State *global_state) {
+    int expnum = gen_exp(e, global_state);
+
+    int truncated_id = get_new_temporary(global_state);
+    gen_temporary_code(truncated_id);
+
+    printf(" = trunc i8 ");
+    gen_temporary_code(expnum);
+    printf(" to i1\n");
+
+    gen_temporary_code(get_new_temporary(global_state));
+    printf(" = icmp eq i1 ");
+    gen_temporary_code(truncated_id);
+    printf(", 0\n");
+    //icmp eq rc, 0
+    gen_conditional_jump(lf, lt, global_state);
+    return global_state->temp_count;
+}
+
+static void gen_ext_i1_to_i8(State *global_state) {
+    gen_temporary_code(get_new_temporary(global_state));
+    printf(" = ");
+    printf("zext i1 ");
+    gen_temporary_code(global_state->temp_count - 1);
+    printf(" to i8\n");
+}
+
+static void gen_label(int labelnum) {
+    printf("l%d:\n", labelnum);
+}
+
+static void gen_unconditional_jump(char *labelstr) {
+    printf("br label %s\n", labelstr);
+}
+
+// Vamos usar a partir de agora a seguinte notação
+// lt = label_true, lf = label_false, le = label_end
+static int gen_and(Exp *e) {
+    int lt  = get_new_label(global_state);
+    int lf  = get_new_label(global_state);
+    int le  = get_new_label(global_state);
+    int lst = get_new_label(global_state);
+    char ltstr[10], lfstr[10], lestr[10], lststr[10];
+
+    copylabel(ltstr, "%%l%d", lt );
+    copylabel(lfstr, "%%l%d", lf );
+    copylabel(lestr,  "%%l%d", le );
+    copylabel(lststr, "%%l%d", lst);
+
+    // testando o lado esquerdo do and
+    // Se for verdade queremos ir pra ltstr,
+    // se for falso
+    gen_cond(e->binary.e1, ltstr, lfstr, global_state);
+
+    gen_label(lt);
+    gen_cond(e->binary.e2, lststr, lfstr, global_state);
+    printf("\n");
+
+    gen_label(lst);
+    gen_unconditional_jump(lestr);
+    printf("\n");
+
+    gen_label(lf);
+    gen_unconditional_jump(lestr);
+    printf("\n");
+
+    printf("l%d:\n", le);
+
+    gen_temporary_code(get_new_temporary(global_state));
+    printf(" = phi i1 [false, %s], [true, %s]\n", lfstr, lststr);
+
+    gen_ext_i1_to_i8(global_state);
+    printf("\n");
+
+    return global_state->temp_count;
+}
+
 static int gen_var(Var *v, State *global_state) {
     return copy_var_address(v->type, v->name, v->is_global, global_state);
 }
 
 static int gen_array(RefVar *r, State *global_state) {
-    int e1num = gen_exp(r->refa.v, global_state);
-    int eindexnum = gen_exp(r->refa.idx, global_state);
+    int expvarnum = gen_exp(r->refa.v, global_state);
+    int expindexnum = gen_exp(r->refa.idx, global_state);
     Type *indexedtype = get_ref_type(r);
 
     gen_temporary_code(get_new_temporary(global_state));
@@ -223,9 +318,49 @@ static int gen_array(RefVar *r, State *global_state) {
     gen_type(indexedtype);
     printf("* ");
     printf(" ");
-    gen_temporary_code(e1num);
+    gen_temporary_code(expvarnum);
     printf(", i32 ");
-    gen_temporary_code(eindexnum);
+    gen_temporary_code(expindexnum);
+    printf("\n");
+
+    return global_state->temp_count;
+}
+
+static int gen_or(Exp *e) {
+    int lt  = get_new_label(global_state);
+    int lf  = get_new_label(global_state);
+    int le  = get_new_label(global_state);
+    int lsf = get_new_label(global_state);
+    char ltstr[10], lfstr[10], lestr[10], lsfstr[10];
+
+    copylabel(ltstr, "%%l%d", lt );
+    copylabel(lfstr, "%%l%d", lf );
+    copylabel(lestr, "%%l%d", le );
+    copylabel(lsfstr, "%%l%d", lsf);
+
+    // testando o lado esquerdo do and
+    // Se for verdade queremos ir pra ltstr,
+    // se for falso
+    gen_cond(e->binary.e1, ltstr, lfstr, global_state);
+
+    gen_label(lt);
+    gen_unconditional_jump(lsfstr);
+    printf("\n");
+
+    gen_label(lf);
+    gen_cond(e->binary.e2, lsfstr, lestr, global_state);
+    printf("\n");
+
+    gen_label(lsf);
+    gen_unconditional_jump(lestr);
+    printf("\n");
+
+    gen_label(le);
+
+    gen_temporary_code(get_new_temporary(global_state));
+    printf(" = phi i1 [false, %s], [true, %s]\n", lfstr, lsfstr);
+
+    gen_ext_i1_to_i8(global_state);
     printf("\n");
 
     return global_state->temp_count;
@@ -262,26 +397,6 @@ static int gen_exp_var (Exp *exp, State *global_state) {
     Type *reftype = get_ref_type(exp->var.def);
 
     gen_load(reftype, global_state->temp_count, global_state);
-
-    return global_state->temp_count;
-}
-
-static int gen_exp_arr(Exp *exp, State *global_state) {
-    Type *vartype = get_exp_type_internal(exp->binary.e1);
-    Type *indexedtype = get_exp_type_internal(exp);
-    int varnum = gen_exp(exp->binary.e1, global_state);
-    int indnum = gen_exp(exp->binary.e2, global_state);
-
-    gen_temporary_code(get_new_temporary(global_state));
-    printf(" = getelementptr ");
-    gen_type(indexedtype);
-    printf(", ");
-    gen_type(vartype);
-    printf(" ");
-    gen_temporary_code(varnum);
-    printf(", i32 ");
-    gen_temporary_code(indnum);
-    printf("\n");
 
     return global_state->temp_count;
 }
@@ -327,12 +442,77 @@ static void gen_retexp(Exp *exp, State *global_state) {
 
 }
 
-static void gen_ext_i1_to_i8(State *global_state) {
-    gen_temporary_code(get_new_temporary(global_state));
-    printf(" = ");
-    printf("zext i1 ");
-    gen_temporary_code(global_state->temp_count - 1);
-    printf(" to i8\n");
+static void gen_stat(Stat *stat, State *global_state);
+
+static void gen_while(Cmd *cmd, State *global_state) {
+    int l_cond = get_new_label(global_state);
+    int l_body = get_new_label(global_state);
+    int l_end = get_new_label(global_state);
+
+    char l_cond_str[10], l_body_str[10], l_end_str[10];
+
+    copylabel(l_cond_str, "%%l%d", l_cond );
+    copylabel(l_body_str, "%%l%d", l_body );
+    copylabel(l_end_str , "%%l%d", l_end  );
+
+    // pula para o inicio do while
+    gen_unconditional_jump(l_cond_str);
+
+    // checa condicao
+    gen_label(l_cond);
+    gen_cond(cmd->cmd_while.exp, l_body_str, l_end_str, global_state);
+
+    // corpo do while
+    gen_label(l_body);
+    gen_stat(cmd->cmd_while.stat, global_state);
+    gen_unconditional_jump(l_cond_str);
+
+    // final do while
+    gen_label(l_end);
+
+}
+
+static void gen_if(Cmd *cmd, State *global_state) {
+    int lt  = get_new_label(global_state);
+    int lf  = get_new_label(global_state);
+    char ltstr[10], lfstr[10];
+
+    copylabel(ltstr, "%%l%d", lt );
+    copylabel(lfstr, "%%l%d", lf );
+
+    gen_cond(cmd->cmd_if.exp, ltstr, lfstr, global_state);
+    gen_label(lt);
+    gen_stat(cmd->cmd_if.stat, global_state);
+    gen_unconditional_jump(lfstr);
+    printf("\n");
+
+    printf("l%d:\n", lf);
+
+}
+
+static void gen_ifelse(Cmd *cmd, State *global_state) {
+    int lt  = get_new_label(global_state);
+    int le  = get_new_label(global_state);
+    int lo  = get_new_label(global_state);
+    char ltstr[10], lestr[10], lostr[10];
+
+    copylabel(ltstr, "%%l%d", lt );
+    copylabel(lestr, "%%l%d", le );
+    copylabel(lostr, "%%l%d", lo );
+
+    gen_cond(cmd->cmd_ifelse.exp, ltstr, lestr, global_state);
+    gen_label(lt);
+    gen_stat(cmd->cmd_ifelse.stat, global_state);
+    gen_unconditional_jump(lostr);
+    printf("\n");
+
+    gen_label(le);
+    gen_stat(cmd->cmd_ifelse.stat2, global_state);
+    gen_unconditional_jump(lostr);
+    printf("\n");
+
+    gen_label(lo);
+
 }
 
 static int gen_binary_exp(Exp *e1, Exp *e2, Exp_type etype, State *global_state) {
@@ -369,12 +549,6 @@ static int gen_binary_exp(Exp *e1, Exp *e2, Exp_type etype, State *global_state)
                 printf("fdiv ");
             else
                 printf("sdiv ");
-            break;
-        case OR:
-            printf("or ");
-            break;
-        case AND:
-            printf("and ");
             break;
         case NEQ:
             if (te1->single.type == FLOAT)
@@ -488,16 +662,17 @@ static int gen_exp(Exp *exp, State *global_state) {
         case MUL:
         case SUB:
         case SUM:
-        case OR:
         case NEQ:
         case EQ:
         case GEQ:
         case LEQ:
         case L:
         case G:
+            return gen_binary_exp(exp->binary.e1, exp->binary.e2, exp->tag, global_state);
+        case OR:
+            return gen_or(exp);
         case AND:
-            return gen_binary_exp(exp->binary.e1, exp->binary.e2, exp->tag,
-                    global_state);
+            return gen_and(exp);
         case NOT:
         case MINUS:
             return gen_unary_type(exp->unary.exp, exp->tag, global_state);
@@ -511,10 +686,6 @@ static int gen_exp(Exp *exp, State *global_state) {
             return gen_int(exp->expchar.c, global_state);
         case EXPBOOL:
             return gen_bool(exp->expbool.b, global_state);
-            /*
-               case VARID:
-               return gen_exp_varid(exp, global_state);
-             */
         case VAR:
             return gen_exp_var(exp, global_state);
         case NEW:
@@ -571,6 +742,21 @@ static void gen_cmd( Cmd *cmd, State *global_state ) {
             global_state->cur_line = cmd->cmd_ret_exp.line;
             gen_retexp(cmd->cmd_ret_exp.exp, global_state);
             gen_cmd(cmd->cmd_ret_exp.next, global_state);
+            break;
+        case IF:
+            global_state->cur_line = cmd->cmd_if.line;
+            gen_if(cmd, global_state);
+            gen_cmd(cmd->cmd_if.next, global_state);
+            break;
+        case IFELSE:
+            global_state->cur_line = cmd->cmd_ifelse.line;
+            gen_ifelse(cmd, global_state);
+            gen_cmd(cmd->cmd_ifelse.next, global_state);
+            break;
+        case WHILE:
+            global_state->cur_line = cmd->cmd_while.line;
+            gen_while(cmd, global_state);
+            gen_cmd(cmd->cmd_while.next, global_state);
             break;
         default:
             fprintf(stderr, "not implemented gen cmd: %d\n", cmd->tag);

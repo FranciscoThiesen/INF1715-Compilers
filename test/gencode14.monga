@@ -1,0 +1,43 @@
+#Vamos fazer um bubble-sort, os elementos ao final do processo estarão em ordem crescente
+
+main() : int {
+    vetor : [int];
+    len : int;
+    aux : int;
+    aux2 : int;
+    temp : int;
+
+    vetor = new int[8];
+    len = 8;
+    aux = 0;
+
+    #inicializando os valores
+    while( aux < len ) {
+        vetor[aux] = len - aux;
+        @ vetor[aux];
+        aux = aux + 1;
+    }
+    
+    aux = 0;
+    while( aux < len ) {
+        aux2 = 0;
+        while( aux2 < len - 1 ) {
+            if( vetor[aux2] > vetor[aux2 + 1] ) {
+                temp = vetor[aux2];
+                vetor[aux2] = vetor[aux2 + 1];
+                vetor[aux2 + 1] = temp;
+            }
+            aux2 = aux2 + 1;
+        }
+        aux = aux + 1;
+    }
+
+    #imprimindo o vetor ( tomara que esteja ) ordenado
+    aux = 0; 
+    while( aux < len ) {
+        @ vetor[aux];
+        aux = aux + 1;
+    }
+    
+    return 0;
+}

@@ -10,6 +10,7 @@ struct state {
     char *cur_func_name;
     int cur_line;
     int temp_count;
+    int label_count;
 };
 
 extern bool type_tree();
