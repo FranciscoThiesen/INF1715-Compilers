@@ -1,0 +1,35 @@
+main() : int {
+	a : int;
+    b : int;
+    f : float;
+    g : float;
+
+    a = 12;
+    b = 34;
+    f = 2.34;
+    g = 7.767;
+
+    a = a + b;
+    @a;
+
+    a = 12;
+    a = a * b;
+    @a;
+
+    a = 34 * 56;
+    a = a / b;
+    @a;
+
+    f = f + g;
+    @f;
+
+    f = 2.34;
+    f = f * g;
+    @f;
+
+    f = 2.34;
+    f = f / g;
+    @f;
+
+    return 0;
+}

@@ -31,6 +31,7 @@ void yyerror(const char *);
     Exp_list *elist;
     Stat *stat;
     Cmd *cmd;
+    RefVar *ref;
     int i;
     float f;
     char *str;
@@ -42,7 +43,8 @@ void yyerror(const char *);
 %type <type> tipo_nativo tipo tipo_opt
 %type <stat> stat
 %type <exp> exp exp_and exp_comp exp_somasub exp_divmul exp_unary
-            exp_atomic exp_base primitiva var chamada_func exp_var
+            exp_atomic exp_base primitiva chamada_func exp_var
+%type <ref> var
 %type <elist> exps exp_tail
 %type <def> def_var def_vars def_func params param param_tail defs def programa
 %type <line> '(' ')' '+' '-' '*' '/' ':' ';' '=' '[' ']' '<' '>' '!' TK_AS TK_NEW TK_GEQUALS TK_EQUALS TK_LEQUALS TK_NEQUALS TK_OR TK_AND
@@ -101,7 +103,7 @@ cmd : TK_IF '(' exp ')' stat                { $$ = newcmd(IF, $2, $3, $5, NULL);
 
 chamada_func : TK_ID '(' exps ')'           { $$ = callexp($1, $2, $3); }
 
-exp_var : var '=' exp                       { $$ = binaryexp(EXPATT, $2, $1, $3); };
+exp_var : var '=' exp                       { $$ = attexp($1, $2, $3); };
 
 exp : exp TK_OR exp_and                     { $$ = binaryexp(OR, $2, $1, $3); }
     | exp_and                               { $$ = $1; }
@@ -141,7 +143,7 @@ primitiva : TK_RAWINT                       { $$ = newint($1); }
           | TK_STRING                       { $$ = newstr($1); }
           | TK_TRUE                         { $$ = newbool($1); }
           | TK_FALSE                        { $$ = newbool($1); }
-          | var                             { $$ = $1; }
+          | var                             { $$ = varexp($1); }
           | '(' exp ')'                     { $$ = $2; }
 
 exps : %empty                               { $$ = NULL; }
@@ -150,7 +152,7 @@ exps : %empty                               { $$ = NULL; }
 exp_tail : %empty                           { $$ = NULL; }
          | ',' exp exp_tail                 { $$ = listexp($2, $3); }
 
-var : exp_base '[' exp ']'                  { $$ = binaryexp(VAR, $2, $1, $3); }
+var : exp_base '[' exp ']'                  { $$ = newvararr($1, $3, $2); }//binaryexp(VAR, $2, $1, $3); }
     | TK_ID                                 { $$ = newvarid($1); }
 
 %%

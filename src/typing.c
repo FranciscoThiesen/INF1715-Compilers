@@ -111,31 +111,6 @@ static void type_params( Def* dparam ) {
     type_params( dparam->var.next );
 }
 
-static Type *get_exp_varid( Exp *exp_var ) {
-    Var *v;
-    bool error;
-
-    v = get_var(exp_var->var.name, &error);
-    if (error) {
-        fprintf(stderr, "error: expected symbol %s to be a variable or parameter in"
-                " line %d\n", exp_var->var.name, global_state->cur_line);
-
-        accepted = false;
-        return newtype(ERROR);
-    }
-
-    if (!v) {
-        fprintf(stderr, "error: undefined symbol %s in line %d\n", exp_var->var.name,
-                global_state->cur_line );
-
-        accepted = false;
-        return newtype(ERROR);
-    }
-
-    exp_var->var.def = v;
-    return v->type;
-}
-
 static void check_explist( char *name,  Def *param_list, Exp_list *arg_list) {
     if( param_list == NULL && arg_list == NULL) return;
     if( param_list == NULL || arg_list == NULL) {
@@ -250,11 +225,67 @@ static Type *get_as( Exp *exp, Type *type) {
     return type;
 }
 
-static Type *get_exp_att( Exp *father, Exp *e1, Exp *e2) {
+static Type *get_var_type( Var **v )  {
+    bool error;
+
+    Var *newvar = get_var( (*v)->name, &error );
+    *v = newvar;
+    return (*v)->type;
+}
+
+static Type *get_array_type( RefVar *array ) {
     Type *t1, *t2;
-    Exp *eaux;
+    Exp *e1, *e2;
+
+    e1 = array->refa.v;
+    e2 = array->refa.idx;
 
     t1 = get_exp_type( e1 );
+    t2 = get_exp_type( e2 );
+    if (is_error(t1))
+        return newtype(ERROR);
+
+    if (!is_array( t1 )) {
+        fprintf(stderr, "error: subscripted value is not an array in line %d\n",
+                global_state->cur_line);
+        accepted = false;
+        return newtype(ERROR);
+    }
+
+    t2 = get_exp_type( e2 );
+    if (is_error(t2))
+        return newtype(ERROR);
+
+    if (!is_int( t2 ) || is_array(t2)) {
+        fprintf(stderr, "error: array index is not an integer in line %d\n",
+                global_state->cur_line);
+        accepted = false;
+        return newtype(ERROR);
+    }
+
+    return t1->seq.next;
+}
+
+
+static Type *get_ref_type( RefVar *ref ) {
+    switch (ref->tag) {
+        case REF_VAR:
+            return get_var_type( &(ref->refv.v));
+        case REF_ARRAY:
+            return get_array_type( ref );
+        default:
+            fprintf(stderr, "unknown ref type: %d\n", ref->tag);
+            exit(-1);
+    }
+}
+
+static Type *get_exp_att( Exp *father, RefVar *e1, Exp *e2 ) {
+    Type *t1, *t2;
+    Exp *eaux;
+    Exp *e;
+
+    e = e2;
+    t1 = get_ref_type( e1 );
     t2 = get_exp_type( e2 );
     if(is_error(t1) || is_error(t2))
         return newtype(ERROR);
@@ -264,17 +295,18 @@ static Type *get_exp_att( Exp *father, Exp *e1, Exp *e2) {
             return t1;
         }
 
-        CAST(father, eaux, binary, e2, t1);
+        CAST(father, eaux, att, e, t1);
         return t1;
     }
 
     if (!compare_type(t1, t2)) {
-        if (e2->tag == NEW)
+        if (e2->tag == NEW) {
             fprintf(stderr, "error: assignment with expression with different "
                     "array type in line %d\n", global_state->cur_line);
-        else
+        } else {
             fprintf(stderr, "error: trying to assign non array type to array"
                     " in line %d\n", global_state->cur_line);
+        }
 
         accepted = false;
         return newtype(ERROR);
@@ -493,42 +525,18 @@ static Type *get_arit_type(Exp *father, Exp *e1, Exp *e2) {
 
     if(is_int(t1)) {
         CAST(father, eaux, binary, e1, t2)
-        father->binary.exptype = t2;
+            father->binary.exptype = t2;
         return t2;
     } else {
         CAST(father, eaux, binary, e2, t1)
-        father->binary.exptype = t1;
+            father->binary.exptype = t1;
         return t1;
     }
 
 }
 
-static Type *get_exp_var( Exp *e1, Exp *e2) {
-    Type *t1, *t2;
-
-    t1 = get_exp_type( e1 );
-    if (is_error(t1))
-        return newtype(ERROR);
-
-    if (!is_array( t1 )) {
-        fprintf(stderr, "error: subscripted value is not an array in line %d\n",
-                global_state->cur_line);
-        accepted = false;
-        return newtype(ERROR);
-    }
-
-    t2 = get_exp_type( e2 );
-    if (is_error(t2))
-        return newtype(ERROR);
-
-    if (!is_int( t2 ) || is_array(t2)) {
-        fprintf(stderr, "error: array index is not an integer in line %d\n",
-                global_state->cur_line);
-        accepted = false;
-        return newtype(ERROR);
-    }
-
-    return t1->seq.next;
+static Type *get_exp_var( Exp *exp ) {
+    return get_ref_type( exp->var.def );
 }
 
 static Type *get_minus( Exp *father, Exp *e1 ) {
@@ -561,9 +569,7 @@ Type *get_exp_type( Exp *exp ) {
     if( exp != NULL ) {
         switch( exp->tag ) {
             case VAR:
-                return get_exp_var( exp->binary.e1, exp->binary.e2 );
-            case VARID:
-                return get_exp_varid( exp );
+                return get_exp_var( exp );
             case CALLEXP:
                 return get_call( exp );
             case AS:
@@ -598,8 +604,8 @@ Type *get_exp_type( Exp *exp ) {
             case EXPBOOL:
                 return exp->expbool.type;
             case EXPATT:
-                global_state->cur_line = exp->binary.line;
-                return get_exp_att( exp, exp->binary.e1, exp->binary.e2 );
+                global_state->cur_line = exp->att.line;
+                return get_exp_att( exp, exp->att.v, exp->att.e );
             case EQ:
                 global_state->cur_line = exp->binary.line;
                 return get_equality_exp( exp, exp->binary.e1, exp->binary.e2 );

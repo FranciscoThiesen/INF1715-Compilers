@@ -282,6 +282,17 @@ Exp *unaryexp(Exp_type tag, int line, Exp *e1) {
     return exp;
 }
 
+Exp *attexp(RefVar *v, int line, Exp *e) {
+    Exp *exp = tryalloc(sizeof(Exp));
+
+    exp->tag = EXPATT;
+    exp->att.v = v;
+    exp->att.e = e;
+    exp->att.line = line;
+
+    return exp;
+}
+
 Exp *binaryexp(Exp_type tag, int line, Exp *e1, Exp *e2) {
     Exp *exp = tryalloc(sizeof(Exp));
 
@@ -326,11 +337,34 @@ Exp *newexp(Type *type, int line, Exp *e1) {
     return exp;
 }
 
-Exp *newvarid(char *name) {
-    Exp *exp = tryalloc(sizeof(Exp));
+RefVar *newvarid(char *name) {
+    RefVar *ref = tryalloc(sizeof(RefVar));
+    Var *v = tryalloc(sizeof(Var));
+    v->name = name;
 
-    exp->tag = VARID;
-    exp->var.name = name;
+    ref->tag = REF_VAR;
+    ref->refv.v = v;
+
+    return ref;
+}
+
+RefVar *newvararr(Exp *var, Exp *index, int line) {
+    RefVar *ref = tryalloc(sizeof(RefVar));
+
+    ref->tag = REF_ARRAY;
+    ref->refa.v = var;
+    ref->refa.idx = index;
+    ref->refa.line = line;
+
+    return ref;
+}
+
+Exp *varexp(RefVar *v) {
+    Exp *exp;
+
+    exp = tryalloc(sizeof(Exp));
+    exp->tag = VAR;
+    exp->var.def = v;
 
     return exp;
 }

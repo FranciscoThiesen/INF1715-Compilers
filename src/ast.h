@@ -16,6 +16,7 @@ typedef union type Type;
 typedef union exp Exp;
 typedef struct exp_list Exp_list;
 typedef union def Def;
+typedef union refvar RefVar;
 typedef enum native_types Native_types;
 typedef enum def_types Def_types;
 typedef enum exp_type Exp_type;
@@ -86,14 +87,42 @@ struct exp_list {
     int line;
 };
 
+typedef enum {
+    REF_VAR,
+    REF_ARRAY
+} RV_tag;
+
+union refvar {
+    RV_tag tag;
+    struct {
+        RV_tag tag;
+        Var *v;
+    } refv;
+    struct {
+        RV_tag tag;
+        //int num;
+        int line;
+        Type *t;
+        Exp *v;
+        Exp *idx;
+    } refa;
+};
+
 union exp {
     Exp_type tag;
     struct {
         Exp_type tag;
         char *name;
-        Var *def;
+        RefVar *def;
         Type *exptype;
     } var;
+    struct {
+        Exp_type tag;
+        RefVar *v;
+        Exp *e;
+        int line;
+        Type *exptype;
+    } att;
     struct {
         Exp_type tag;
         char *name;
@@ -265,6 +294,10 @@ extern Def *vardef(char *name, Type *type, int line);
 extern Def *varseqdef(Def *v1, Def *v2);
 extern Def *funcdef(char *name, Def *params, Type * type,
         Stat *stat, int line);
+Exp *varexp(RefVar *v);
+RefVar *newvarid(char *name);
+RefVar *newvararr(Exp *var, Exp *index, int line);
+Exp *attexp(RefVar *v, int line, Exp *e);
 extern Type *newtype(Native_types ntype);
 extern Type *newseqtype(Type *t1);
 extern Var *newparamseq(Var *p1, Var *p2);
@@ -279,7 +312,6 @@ extern Exp *unaryexp(Exp_type tag, int line, Exp *e1);
 extern Exp *binaryexp(Exp_type tag, int line, Exp *e1, Exp *e2);
 extern Exp *callexp(char *name, int line, Exp_list *e1);
 extern Exp *newexp(Type *type, int line, Exp *e1);
-extern Exp *newvarid(char *name);
 extern Exp_list *listexp(Exp *e1, Exp_list *e2);
 extern Exp *newint(int i);
 extern Exp *newfloat(float  f);

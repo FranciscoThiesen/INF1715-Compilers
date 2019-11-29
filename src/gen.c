@@ -36,12 +36,24 @@ static void gen_printf_call(Type *t, char *tfmt, int sz, int expnum) {
     printf(")\n");
 }
 
+static Type *get_exp_type_internal(Exp *exp);
+
+static Type *get_ref_type(RefVar *r) {
+    switch (r->tag) {
+        case REF_VAR:
+            return r->refv.v->type;
+        case REF_ARRAY:
+            return get_exp_type_internal(r->refa.v)->seq.next;
+        default:
+            fprintf(stderr, "not implemented\n");
+            exit(-1);
+    }
+}
+
 static Type *get_exp_type_internal(Exp *exp) {
     switch(exp->tag) {
         case VAR:
-            return get_exp_type_internal(exp->binary.e1)->seq.next;
-        case VARID:
-            return exp->var.def->type;
+            return get_ref_type(exp->var.def);
         case EXPCHAR:
             return exp->expchar.type;
         case EXPINT:
@@ -117,20 +129,6 @@ static int get_new_temporary(State *global_state) {
     return ++(global_state->temp_count);
 }
 
-static void copy_var_address(Type *type, char *name, bool is_global,
-        State *global_state) {
-    gen_temporary_code(get_new_temporary(global_state));
-    printf(" = getelementptr ");
-    gen_type(type);
-    printf(", ");
-    gen_type(type);
-    printf("* ");
-    if(is_global) printf("@");
-    else printf("%%");
-    printf("%s", name);
-    printf(", i32 0\n");
-}
-
 static void gen_load(Type *t, int address_temporary, State *global_state) {
     gen_temporary_code(get_new_temporary(global_state));
     printf(" = load ");
@@ -193,44 +191,30 @@ static void gen_zero(Type *type) {
     }
 }
 
-static int gen_exp_att(Exp *e1, Exp *e2, State *global_state) {
-    int exp1num = gen_exp(e1, global_state);
-    int exp2num = gen_exp(e2, global_state);
-    Type *exp1type = get_exp_type_internal(e1);
-    Type *exp2type = get_exp_type_internal(e2);
-
-    if (e2->tag == VARID || e2->tag == VAR) {
-        gen_load(exp2type, exp2num, global_state);
-        exp2num = global_state->temp_count;
-    }
-
-    gen_store(exp1type, exp2type, exp1num, exp2num);
-
-    return global_state->temp_count;
-}
-
-static int gen_exp_varid(Exp *exp, State *global_state) {
-    Var *v = exp->var.def;
-    copy_var_address(v->type, v->name, v->is_global, global_state);
-
-    return global_state->temp_count;
-}
-
-static int gen_exp_var(Exp *exp, State *global_state) {
-    Type *vartype = get_exp_type_internal(exp->binary.e1);
-    Type *indexedtype = get_exp_type_internal(exp);
-    int varnum = gen_exp(exp->binary.e1, global_state);
-    int indnum = gen_exp(exp->binary.e2, global_state);
-
+static int copy_var_address(Type *type, char *name, bool is_global,
+        State *global_state) {
     gen_temporary_code(get_new_temporary(global_state));
-    printf(" = load ");
-    gen_type(vartype);
+    printf(" = getelementptr ");
+    gen_type(type);
     printf(", ");
-    gen_type(vartype);
+    gen_type(type);
     printf("* ");
-    printf(" ");
-    gen_temporary_code(varnum);
-    printf("\n");
+    if(is_global) printf("@");
+    else printf("%%");
+    printf("%s", name);
+    printf(", i32 0\n");
+
+    return global_state->temp_count;
+}
+
+static int gen_var(Var *v, State *global_state) {
+    return copy_var_address(v->type, v->name, v->is_global, global_state);
+}
+
+static int gen_array(RefVar *r, State *global_state) {
+    int e1num = gen_exp(r->refa.v, global_state);
+    int eindexnum = gen_exp(r->refa.idx, global_state);
+    Type *indexedtype = get_ref_type(r);
 
     gen_temporary_code(get_new_temporary(global_state));
     printf(" = getelementptr ");
@@ -239,7 +223,62 @@ static int gen_exp_var(Exp *exp, State *global_state) {
     gen_type(indexedtype);
     printf("* ");
     printf(" ");
-    gen_temporary_code(global_state->temp_count - 1);
+    gen_temporary_code(e1num);
+    printf(", i32 ");
+    gen_temporary_code(eindexnum);
+    printf("\n");
+
+    return global_state->temp_count;
+}
+
+static int gen_ref(RefVar *r, State *global_state) {
+    switch (r->tag) {
+        case REF_VAR:
+            return gen_var(r->refv.v, global_state);
+            break;
+        case REF_ARRAY:
+            return gen_array(r, global_state);
+            break;
+        default:
+            fprintf(stderr, "not implemented\n");
+            exit(-1);
+    }
+}
+
+static int gen_exp_att(RefVar *r, Exp *e, State *global_state) {
+    int refnum = gen_ref(r, global_state);
+    int expnum = gen_exp(e, global_state);
+
+    Type *reftype = get_ref_type(r);
+    Type *exptype = get_exp_type_internal(e);
+
+    gen_store(reftype, exptype, refnum, expnum);
+
+    return global_state->temp_count;
+}
+
+static int gen_exp_var (Exp *exp, State *global_state) {
+    gen_ref(exp->var.def, global_state);
+    Type *reftype = get_ref_type(exp->var.def);
+
+    gen_load(reftype, global_state->temp_count, global_state);
+
+    return global_state->temp_count;
+}
+
+static int gen_exp_arr(Exp *exp, State *global_state) {
+    Type *vartype = get_exp_type_internal(exp->binary.e1);
+    Type *indexedtype = get_exp_type_internal(exp);
+    int varnum = gen_exp(exp->binary.e1, global_state);
+    int indnum = gen_exp(exp->binary.e2, global_state);
+
+    gen_temporary_code(get_new_temporary(global_state));
+    printf(" = getelementptr ");
+    gen_type(indexedtype);
+    printf(", ");
+    gen_type(vartype);
+    printf(" ");
+    gen_temporary_code(varnum);
     printf(", i32 ");
     gen_temporary_code(indnum);
     printf("\n");
@@ -301,15 +340,6 @@ static int gen_binary_exp(Exp *e1, Exp *e2, Exp_type etype, State *global_state)
     int e1num = gen_exp(e1, global_state);
     int e2num = gen_exp(e2, global_state);
 
-    if (e1->tag == VAR || e1->tag == VARID) {
-        gen_load(te1, e1num, global_state);
-        e1num = global_state->temp_count;
-    }
-
-    if (e2->tag == VAR || e2->tag == VARID) {
-        gen_load(te1, e2num, global_state);
-        e2num = global_state->temp_count;
-    }
     gen_temporary_code(get_new_temporary(global_state));
     printf(" = ");
     switch(etype) {
@@ -416,11 +446,6 @@ static int gen_unary_type(Exp *e1, Exp_type etype, State *global_state) {
     int e1num = gen_exp(e1, global_state);
     Type *te1 = get_exp_type_internal(e1);
 
-    if (e1->tag == VAR || e1->tag == VARID) {
-        gen_load(te1, e1num, global_state);
-        e1num = global_state->temp_count;
-    }
-
     gen_temporary_code(get_new_temporary(global_state));
     printf(" = ");
     switch(etype) {
@@ -471,12 +496,13 @@ static int gen_exp(Exp *exp, State *global_state) {
         case L:
         case G:
         case AND:
-            return gen_binary_exp(exp->binary.e1, exp->binary.e2, exp->tag, global_state);
+            return gen_binary_exp(exp->binary.e1, exp->binary.e2, exp->tag,
+                    global_state);
         case NOT:
         case MINUS:
             return gen_unary_type(exp->unary.exp, exp->tag, global_state);
         case EXPATT:
-            return gen_exp_att(exp->binary.e1, exp->binary.e2, global_state);
+            return gen_exp_att(exp->att.v, exp->att.e, global_state);
         case EXPINT:
             return gen_int(exp->expint.i, global_state);
         case EXPFLOAT:
@@ -485,14 +511,16 @@ static int gen_exp(Exp *exp, State *global_state) {
             return gen_int(exp->expchar.c, global_state);
         case EXPBOOL:
             return gen_bool(exp->expbool.b, global_state);
-        case VARID:
-            return gen_exp_varid(exp, global_state);
+            /*
+               case VARID:
+               return gen_exp_varid(exp, global_state);
+             */
         case VAR:
             return gen_exp_var(exp, global_state);
         case NEW:
             return gen_exp_new(exp->new.exp, exp->new.type, global_state);
         default:
-            fprintf(stderr, "not implemented: %d\n", exp->tag);
+            fprintf(stderr, "not implemented genexp: %d\n", exp->tag);
             exit(-1);
     }
 }
@@ -501,26 +529,16 @@ static void gen_print(Exp *exp, State *global_state) {
     int expnum = gen_exp(exp, global_state);
     Type *exptype = get_exp_type_internal(exp);
 
-    if (exp->tag == VAR || exp->tag == VARID) {
-        gen_load(exptype, expnum, global_state);
-        expnum = global_state->temp_count;
-    }
     if (exptype->tag == SINGLE) {
         switch(exptype->single.type) {
             case CHAR:
-                //gen_printf_call("char", "i32", 4, expnum);
-                gen_printf_call(exptype, "char", 4, expnum);
-                break;
             case INT:
-                //gen_printf_call("int", "i32", 4, expnum);
                 gen_printf_call(exptype, "int", 4, expnum);
                 break;
             case FLOAT:
-                //gen_printf_call("float", "double", 6, expnum);
                 gen_printf_call(exptype, "float", 6, expnum);
                 break;
             case BOOL:
-                //gen_printf_call("bool", "i8", 6, expnum);
                 gen_printf_call(exptype, "bool", 6, expnum);
                 break;
             default:
@@ -555,7 +573,7 @@ static void gen_cmd( Cmd *cmd, State *global_state ) {
             gen_cmd(cmd->cmd_ret_exp.next, global_state);
             break;
         default:
-            fprintf(stderr, "not implemented: %d\n", cmd->tag);
+            fprintf(stderr, "not implemented gen cmd: %d\n", cmd->tag);
             exit(-1);
     }
 
