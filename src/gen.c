@@ -219,10 +219,10 @@ static int copy_var_address(Type *type, char *name, bool is_global,
     return global_state->temp_count;
 }
 
-static void gen_conditional_jump(char *lf, char *lt, State *global_state) {
+static void gen_conditional_jump(char *lt, char *lf, State *global_state) {
     printf("br i1 ");
     gen_temporary_code(global_state->temp_count);
-    printf(", label %s, label %s\n", lf, lt);
+    printf(", label %s, label %s\n", lt, lf);
 }
 
 static int gen_cond(Exp *e, char *lt, char *lf, State *global_state) {
@@ -392,11 +392,11 @@ static int gen_exp_att(RefVar *r, Exp *e, State *global_state) {
     return global_state->temp_count;
 }
 
-static int gen_exp_var (Exp *exp, State *global_state) {
-    gen_ref(exp->var.def, global_state);
+static int gen_exp_var(Exp *exp, State *global_state) {
+    int refnum = gen_ref(exp->var.def, global_state);
     Type *reftype = get_ref_type(exp->var.def);
 
-    gen_load(reftype, global_state->temp_count, global_state);
+    gen_load(reftype, refnum, global_state);
 
     return global_state->temp_count;
 }
@@ -515,7 +515,8 @@ static void gen_ifelse(Cmd *cmd, State *global_state) {
 
 }
 
-static int gen_binary_exp(Exp *e1, Exp *e2, Exp_type etype, State *global_state) {
+static int gen_binary_exp(Exp *e1, Exp *e2, Exp_type etype,
+        State *global_state) {
     Type *te1 = get_exp_type_internal(e1);
     int e1num = gen_exp(e1, global_state);
     int e2num = gen_exp(e2, global_state);
@@ -635,7 +636,8 @@ static int gen_unary_type(Exp *e1, Exp_type etype, State *global_state) {
             gen_ext_i1_to_i8(global_state);
             break;
         case MINUS:
-            if( te1->single.type == FLOAT ) printf("f");
+            if( te1->single.type == FLOAT )
+                printf("f");
 
             printf("sub ");
             gen_type(te1);
@@ -668,7 +670,8 @@ static int gen_exp(Exp *exp, State *global_state) {
         case LEQ:
         case L:
         case G:
-            return gen_binary_exp(exp->binary.e1, exp->binary.e2, exp->tag, global_state);
+            return gen_binary_exp(exp->binary.e1, exp->binary.e2, exp->tag,
+                    global_state);
         case OR:
             return gen_or(exp);
         case AND:
@@ -678,12 +681,11 @@ static int gen_exp(Exp *exp, State *global_state) {
             return gen_unary_type(exp->unary.exp, exp->tag, global_state);
         case EXPATT:
             return gen_exp_att(exp->att.v, exp->att.e, global_state);
+        case EXPCHAR:
         case EXPINT:
             return gen_int(exp->expint.i, global_state);
         case EXPFLOAT:
             return gen_float(exp->expfloat.f, global_state);
-        case EXPCHAR:
-            return gen_int(exp->expchar.c, global_state);
         case EXPBOOL:
             return gen_bool(exp->expbool.b, global_state);
         case VAR:
@@ -722,12 +724,12 @@ static void gen_print(Exp *exp, State *global_state) {
 }
 
 static void gen_cmd( Cmd *cmd, State *global_state ) {
-    if (!cmd)
+    if (cmd == NULL)
         return;
 
     switch ( cmd->tag ) {
         case PRINT:
-            gen_print( cmd->print.exp, global_state);
+            gen_print(cmd->print.exp, global_state);
             gen_cmd( cmd->print.next, global_state);
             break;
         case ATTCMD:
@@ -739,22 +741,18 @@ static void gen_cmd( Cmd *cmd, State *global_state ) {
             gen_cmd(cmd->cmd_ret.next, global_state);
             break;
         case RETEXP:
-            global_state->cur_line = cmd->cmd_ret_exp.line;
             gen_retexp(cmd->cmd_ret_exp.exp, global_state);
             gen_cmd(cmd->cmd_ret_exp.next, global_state);
             break;
         case IF:
-            global_state->cur_line = cmd->cmd_if.line;
             gen_if(cmd, global_state);
             gen_cmd(cmd->cmd_if.next, global_state);
             break;
         case IFELSE:
-            global_state->cur_line = cmd->cmd_ifelse.line;
             gen_ifelse(cmd, global_state);
             gen_cmd(cmd->cmd_ifelse.next, global_state);
             break;
         case WHILE:
-            global_state->cur_line = cmd->cmd_while.line;
             gen_while(cmd, global_state);
             gen_cmd(cmd->cmd_while.next, global_state);
             break;
@@ -810,12 +808,9 @@ static void gen_func(Def *dfunc, State *global_state) {
     if (f == NULL)
         return;
 
-    gen_params(f->param, global_state );
-
-    global_state->cur_line = f->line;
+    gen_params(f->param, global_state);
 
     global_state->cur_func_type = f->type;
-    global_state->cur_func_name = f->name;
 
     printf("define ");
     gen_type(f->type);
@@ -834,7 +829,11 @@ static void gen_defs(Def *def, State *global_state, bool is_global) {
 
     switch (def->tag) {
         case DEFVAR:
-            is_global ? gen_global_var(def) : gen_local_var(def);
+            if (is_global)
+                gen_global_var(def);
+            else
+                gen_local_var(def);
+
             gen_defs(def->var.next, global_state, is_global);
             break;
         case DEFFUNC:

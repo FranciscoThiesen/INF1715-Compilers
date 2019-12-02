@@ -3,6 +3,7 @@
 main() : int {
 	a : bool;
 	a = false;
+
 	@ ( a );
 	@ ( !a );
     return 19;
