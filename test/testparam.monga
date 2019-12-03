@@ -1,0 +1,12 @@
+bla(a : float, b : float) : float {
+	return a * b;
+}
+
+main() : int {
+	f : float;
+
+	f = bla(bla(2.3, 5.7), bla(2.4, 6.5));
+	@f;
+
+	return 0;
+}

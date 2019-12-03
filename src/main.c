@@ -74,6 +74,7 @@ int main(int argc, char *argv[]) {
         exit(-1);
 
     global_state = tryalloc(sizeof(State));
+    memset(global_state, 0, sizeof(State));
     init_symbols();
     accepted = type_tree();
     if (accepted)

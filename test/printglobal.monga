@@ -3,8 +3,8 @@
 c : char;
 
 main() : int {
-    #vendo comportamento de char
     c = 65;
+
     @c;
     return 8;
 }

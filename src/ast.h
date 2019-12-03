@@ -83,6 +83,7 @@ union type {
 
 struct exp_list {
     Exp *exp;
+    int expnum;
     Exp_list *next;
     int line;
 };
@@ -100,7 +101,6 @@ union refvar {
     } refv;
     struct {
         RV_tag tag;
-        //int num;
         int line;
         Type *t;
         Exp *v;
@@ -199,6 +199,7 @@ struct var {
     Type *type;
     int line;
     bool is_global;
+    int tempnum;
 };
 
 struct func {
@@ -213,13 +214,13 @@ union def {
     Def_types tag;
     struct {
         Def_types tag;
-        Var *def; 
         Def *next;
+        Var *def;
     } var;
     struct {
         Def_types tag;
-        Func *def;
         Def *next;
+        Func *def;
     } func;
 };
 

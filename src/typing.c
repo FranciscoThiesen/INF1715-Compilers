@@ -119,13 +119,14 @@ static void check_explist( char *name,  Def *param_list, Exp_list *arg_list) {
         if( param_list == NULL ) {
             fprintf(stderr, "error: too many arguments to function %s in line %d\n",
                     name, global_state->cur_line);
+            accepted = false;
             return ;
         } else {
             fprintf(stderr, "error: too few arguments to function %s in line %d\n",
                     name, global_state->cur_line);
+            accepted = false;
             return ;
         }
-        accepted = false;
     }
     Var *param;
     Type *t1, *t2;
@@ -873,11 +874,11 @@ static void type_defs(Def *def) {
 
     switch (def->tag) {
         case DEFVAR:
-            type_var( def );
+            type_var(def);
             type_defs( def->var.next );
             break;
         case DEFFUNC:
-            type_func( def );
+            type_func(def);
             type_defs( def->func.next );
             break;
     }

@@ -2,6 +2,7 @@
 
 main() : int {
 	a : bool;
+
 	a = false;
 
 	@ ( a );
