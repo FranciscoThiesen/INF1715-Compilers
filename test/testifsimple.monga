@@ -1,0 +1,32 @@
+bla() : int {
+	a : bool;
+	a = false;
+
+	if (a) {
+		return 2;
+	} else {
+		return 1;
+	}
+}
+
+attasexp() {
+	a : int;
+	f : float;
+
+	a = 2;
+	f = 0.0;
+	
+	if (a) {
+		@32;
+	}
+
+	if (f) {
+		@32;
+	}
+}
+
+main() : int {
+
+	@bla();
+	attasexp();
+}

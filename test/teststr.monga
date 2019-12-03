@@ -1,0 +1,14 @@
+main() : int {
+	str : [char];
+	str2 : [char];
+	c : char;
+
+	str = "internet";
+	str2 = "jazz";
+	c = str2[3];
+
+	@c;
+	@str;
+	@str2;
+	@"where is the internet";
+}

@@ -403,8 +403,8 @@ Exp *newchar(char c) {
     Exp *exp = tryalloc(sizeof(Exp));
 
     exp->tag = EXPCHAR;
-    exp->expchar.c = c;
-    exp->expchar.type = newtype(CHAR);
+    exp->expint.i = c;
+    exp->expint.type = newtype(CHAR);
 
     return exp;
 }

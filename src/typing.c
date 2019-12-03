@@ -14,20 +14,17 @@
 
 static bool accepted = true;
 
-static int compare_type(Type *t1, Type *t2) {
+int compare_type(Type *t1, Type *t2) {
     if (t1 == NULL || t2 == NULL)
         return 0;
 
     if(t1->tag != t2->tag) return 0;
     if(t1->tag == SEQ) return compare_type(t1->seq.next, t2->seq.next );
-    if ((t1->single.type == CHAR && t2->single.type == INT) ||
-            (t1->single.type == INT && t2->single.type == CHAR)) {
-        return 1;
-    }
+
     return ( t1->single.type == t2->single.type );
 }
 
-static bool is_float(Type *t) {
+bool is_float(Type *t) {
     if (t == NULL)
         return 0;
 
@@ -35,7 +32,7 @@ static bool is_float(Type *t) {
     return is_float(t->seq.next);
 }
 
-static bool is_char(Type *t) {
+bool is_char(Type *t) {
     if (t == NULL)
         return 0;
 
@@ -43,7 +40,7 @@ static bool is_char(Type *t) {
     return is_char(t->seq.next);
 }
 
-static bool is_bool(Type *t) {
+bool is_bool(Type *t) {
     if (t == NULL)
         return 0;
 
@@ -51,7 +48,11 @@ static bool is_bool(Type *t) {
     return is_bool(t->seq.next);
 }
 
-static bool is_array(Type *t) { 
+bool is_void(Type *t) {
+    return (t == NULL);
+}
+
+bool is_array(Type *t) {
     if (t == NULL)
         return 0;
 
@@ -70,6 +71,13 @@ static bool is_numeral(Type *t) {
         return 0;
 
     return ((is_int(t) || is_float(t) || is_char(t)) && !is_array(t));
+}
+
+static void check_void(Type *t) {
+    if (is_void(t)) {
+        fprintf(stderr, "error: type void is incomplete in line %d\n", global_state->cur_line);
+        accepted = false;
+    }
 }
 
 static void type_stat( Stat *stat );
@@ -93,6 +101,8 @@ static void type_var( Def *dvar ) {
                 v->name, global_state->cur_line);
         accepted = false;
     }
+
+
 }
 static void type_params( Def* dparam ) {
     bool ok;
@@ -194,6 +204,7 @@ static Type *get_new( Type *type, Exp *exp) {
     if (is_error(texp))
         return newtype(ERROR);
 
+    check_void(texp);
     if (!is_int(texp)) {
         fprintf(stderr, "error: expression inside new must be an integer in line %d\n",
                 global_state->cur_line);
@@ -211,6 +222,7 @@ static Type *get_as( Exp *exp, Type *type) {
     if(is_error(texp))
         return newtype(ERROR);
 
+    check_void(texp);
     if (is_array( texp )) {
         fprintf(stderr, "error: cast of array not allowed in line %d\n",
                 global_state->cur_line);
@@ -306,6 +318,8 @@ static Type *get_exp_att( Exp *father, RefVar *e1, Exp *e2 ) {
     if(is_error(t1) || is_error(t2))
         return newtype(ERROR);
 
+    check_void(t1);
+    check_void(t2);
     if (!is_array(t1) && !is_array(t2)) {
         if (compare_type(t1, t2)) {
             return t1;
@@ -362,7 +376,7 @@ static Type *get_bin_logical( Exp *father, Exp *e1, Exp *e2 ) {
     }
     if (!is_bool(t2) || is_array(t2)) {
         CAST(father, eaux2, binary, e2, tbool);
-    } 
+    }
 
     father->binary.exptype = tbool;
     return tbool;
@@ -377,6 +391,7 @@ static Type *get_not( Exp *father, Exp *e1 ) {
     if (is_error(t1))
         return newtype(ERROR);
 
+    check_void(t1);
     tbool = newtype(BOOL);
     if (!is_bool(t1) || is_array(t1)) {
         CAST(father, eaux, binary, e1, tbool);
@@ -396,6 +411,8 @@ static Type *get_equality_exp( Exp *father, Exp *e1, Exp *e2 ) {
     if (is_error(t1) || is_error(t2))
         return newtype(ERROR);
 
+    check_void(t1);
+    check_void(t2);
     tbool = newtype(BOOL);
     if (compare_type(t1, t2)) {
         father->binary.exptype = tbool;
@@ -460,6 +477,8 @@ static Type *get_compare_exp( Exp *father, Exp *e1, Exp *e2 ) {
     if (is_error(t1) || is_error(t2))
         return newtype(ERROR);
 
+    check_void(t1);
+    check_void(t2);
     tbool = newtype(BOOL);
     if (is_array(t1) || is_array(t2)) {
         fprintf(stderr, "error: attempt to compare array values in line %d\n",
@@ -508,6 +527,8 @@ static Type *get_arit_type(Exp *father, Exp *e1, Exp *e2) {
     if (is_error(t1) || is_error(t2))
         return newtype(ERROR);
 
+    check_void(t1);
+    check_void(t2);
     if (!is_numeral(t1) || !is_numeral(t2)) {
         fprintf(stderr, "error: invalid operand to binary ");
         switch (father->tag) {
@@ -535,7 +556,7 @@ static Type *get_arit_type(Exp *father, Exp *e1, Exp *e2) {
         return t1;
     }
 
-    // (int, int) -> int, (float, float) -> float   
+    // (int, int) -> int, (float, float) -> float
     // cast t1 to float
 
     if(is_int(t1)) {
@@ -563,6 +584,7 @@ static Type *get_minus( Exp *father, Exp *e1 ) {
     if (is_error(t1))
         return newtype(ERROR);
 
+    check_void(t1);
     if ((!is_int(t1) && !is_float(t1) && !is_char(t1)) || is_array(t1)) {
         fprintf(stderr, "error: wrong type argument to unary minus"
                 " in line %d\n", global_state->cur_line);
@@ -614,6 +636,7 @@ Type *get_exp_type( Exp *exp ) {
             case EXPCHAR:
                 return exp->expchar.type;
             case EXPSTR:
+                global_state->num_strs++;
                 return exp->expstr.type;
             case EXPBOOL:
                 return exp->expbool.type;
@@ -663,6 +686,8 @@ static void type_if( Cmd *father, Exp *exp, Stat *stat ) {
     t1 = get_exp_type( exp);
     if (is_error(t1))
         return;
+
+    check_void(t1);
 
     if( is_array(t1) ) {
         fprintf(stderr, "error: if condition cannot be an array in line %d\n",
@@ -772,7 +797,8 @@ static void type_while ( Cmd *father, Exp *exp, Stat *stat ) {
 }
 
 static void type_print( Exp *exp ) {
-    get_exp_type( exp);
+    Type *t = get_exp_type( exp);
+    check_void(t);
 }
 
 static void type_cmd( Cmd *cmd ) {
@@ -858,7 +884,7 @@ static void type_func( Def *dfunc) {
         accepted = false;
     }
 
-    global_state->cur_func_type = f->type; 
+    global_state->cur_func_type = f->type;
     global_state->cur_func_name = f->name;
     enter_scope();
     type_params( f->param );

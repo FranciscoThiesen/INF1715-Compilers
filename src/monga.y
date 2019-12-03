@@ -3,7 +3,7 @@
 %token TK_INT TK_CHAR TK_FLOAT TK_BOOL
 %token TK_IF TK_ELSE TK_WHILE TK_RET TK_NEW TK_AS
 %token TK_AND TK_OR TK_PRINT TK_GEQUALS TK_LEQUALS TK_EQUALS TK_NEQUALS
-%token <i> TK_RAWINT
+%token <i> TK_RAWINT TK_RAWCHAR
 %token <f> TK_RAWFLOAT
 %token <str> TK_STRING TK_ID
 %token <b> TK_TRUE TK_FALSE
@@ -139,6 +139,7 @@ exp_base : primitiva                        { $$ = $1; }
          | chamada_func                     { $$ = $1; }
 
 primitiva : TK_RAWINT                       { $$ = newint($1); }
+          | TK_RAWCHAR                      { $$ = newchar($1); }
           | TK_RAWFLOAT                     { $$ = newfloat($1); }
           | TK_STRING                       { $$ = newstr($1); }
           | TK_TRUE                         { $$ = newbool($1); }

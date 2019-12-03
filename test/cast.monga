@@ -1,0 +1,67 @@
+i : int;
+f : float;
+b : bool;
+c : char;
+
+castbool(bparam : bool) {
+	@bparam;
+
+	f = bparam;
+	@f;
+
+	i = bparam;
+	@i;
+
+	c = bparam;
+	@c;
+}
+
+castfloat(fparam : float) {
+	@fparam;
+
+	i = fparam;
+	@i;
+
+	b = fparam;
+	@b;
+
+	c = fparam;
+	@c;
+}
+
+castint(iparam : int) {
+	@iparam;
+
+	f = iparam;
+	@f;
+
+	b = iparam;
+	@b;
+
+	c = iparam;
+	@c;
+}
+
+castchar(cparam : char) {
+	@cparam;
+
+	f = cparam;
+	@f;
+
+	b = cparam;
+	@b;
+
+	i = cparam;
+	@i;
+}
+
+main() : int {
+
+	castfloat(100.25);
+	castint(112);
+	castbool(true);
+	castbool(false);
+	castchar('a');
+
+	return 0;
+}

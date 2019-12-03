@@ -1,0 +1,10 @@
+main() : int{
+	c : int;
+
+	c = 12;
+
+	while(c) {
+		 @"aeee";
+		 c = c - 1;
+	}
+}

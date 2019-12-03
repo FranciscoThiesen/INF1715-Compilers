@@ -144,7 +144,7 @@ as                              {
                                 }
 {literal}                       {
                                    yylval.i = literalcpy();
-                                   return TK_RAWINT;
+                                   return TK_RAWCHAR;
                                 }
 
 \#[^\n]*\n                      { line++; }
