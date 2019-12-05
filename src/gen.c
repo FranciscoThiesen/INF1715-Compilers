@@ -24,8 +24,8 @@ static int add_strinfo(char *str, int len, State *global_state) {
     int strnum = inc_str_count(global_state);
 
     global_state->strinfos[strnum].len = len;
-    global_state->strinfos[strnum].str = malloc(sizeof(char) * strlen(str));
-    strncpy(global_state->strinfos[strnum].str, str, strlen(str));
+    global_state->strinfos[strnum].str = malloc(sizeof(char) * len);
+    strncpy(global_state->strinfos[strnum].str, str, len);
 
     return strnum;
 }
