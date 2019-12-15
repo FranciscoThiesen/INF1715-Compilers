@@ -83,12 +83,12 @@ static void gen_type(Type *type);
 
 static void call_printf(int sz, char *tfmt) {
     printf("call i32 (i8*, ...) @printf( i8* getelementptr ([%d x i8],"
-            "[%d x i8]*  @fmt%s, i32 0, i32 0))\n", sz, sz, tfmt);
+            "[%d x i8]*  @.fmt%s, i32 0, i32 0)", sz, sz, tfmt);
 }
 
 static void gen_printf_call(Type *t, char *tfmt, int sz, int expnum) {
-    printf("call i32 (i8*, ...) @printf( i8* getelementptr ([%d x i8],"
-            "[%d x i8]*  @fmt%s, i32 0, i32 0), ", sz, sz, tfmt);
+    call_printf(sz, tfmt);
+    printf(", ");
     gen_type(t);
     printf(" ");
     gen_local_temporary_code(expnum);
@@ -216,7 +216,6 @@ static void gen_store(Type* t1, Type *t2, int address_temporary, int tempnum,
     printf("\n");
 }
 
-
 static int gen_exp(Exp *exp, State *global_state);
 
 static void gen_label_ref(int labelnum) {
@@ -227,7 +226,6 @@ static void gen_label(int labelnum) {
     printf("l%d:\n", labelnum);
 }
 
-
 static void gen_conditional_jump(int lt, int lf, int tempnum) {
     char ltstr[10], lfstr[10];
 
@@ -237,7 +235,6 @@ static void gen_conditional_jump(int lt, int lf, int tempnum) {
     copylabel(lfstr, lf);
     printf(", label %s, label %s\n", ltstr, lfstr);
 }
-
 
 static int trunc_i8_to_i1(int tempnum, State *global_state) {
     gen_local_temporary_code(get_new_temporary(global_state));
@@ -287,16 +284,6 @@ static void gen_cond(Exp *exp, int lt, int lf, State *global_state) {
         case NOT:
             gen_cond(exp->unary.exp, lf, lt, global_state);
             break;
-        case SUM:
-        case SUB:
-        case MUL:
-        case DIV:
-            e1num = gen_exp(exp, global_state);
-            Type *te1 = get_exp_type_internal(exp);
-
-            e1num = cast_bool(e1num, te1);
-            trunc_gen_conditional_jump(lt, lf, e1num);
-            break;
         case NEQ:
         case EQ:
         case GEQ:
@@ -325,44 +312,25 @@ static int gen_int(int eint, State *global_state) {
     printf(" = add i32 0, %d\n", eint);
     return global_state->temp_count;
 }
-static int copy_var_address(Type *type, int tempnum, bool is_global, State *global_state);
 
-static int gen_str(char *str, Type *t, State *global_state) {
-    int strsize = strlen(str) + 1;
-    int strnum = add_strinfo(str, strsize, global_state);
-    gen_local_temporary_code(get_new_temporary(global_state));
-    printf(" = alloca [%d x ", strsize);
-    gen_native_type(CHAR);
-    printf("]\n");
+static int gen_str_bitcast(Type *t, int strnum, int strsize, State *global_state) {
     gen_local_temporary_code(get_new_temporary(global_state));
     printf(" = bitcast [%d x ", strsize);
     gen_native_type(CHAR);
     printf("]* ");
-    gen_local_temporary_code(global_state->temp_count - 1);
-    printf(" to ");
-    gen_native_type(CHAR);
-    printf("*\n");
-    printf("call void @llvm.memcpy.p0i8.p0i8.i64(i8* ");
-    gen_local_temporary_code(global_state->temp_count);
-    printf(", ");
-    gen_native_type(CHAR);
-    printf("* getelementptr inbounds ([%d x ", strsize);
-    gen_native_type(CHAR);
-    printf("], [%d x ", strsize);
-    gen_native_type(CHAR);
-    printf("]* ");
     gen_str_temp_name(strnum);
-    printf(", i32 0, i32 0), i64 %d, i1 false)\n", strsize);
-    gen_local_temporary_code(get_new_temporary(global_state));
-    printf(" = getelementptr inbounds [%d x ", strsize);
-    gen_native_type(CHAR);
-    printf("], [%d x ", strsize);
-    gen_native_type(CHAR);
-    printf("]* ");
-    gen_local_temporary_code(global_state->temp_count - 2);
-    printf(", i32 0, i32 0\n");
+    printf(" to ");
+    gen_type(t);
+    printf("\n");
 
     return global_state->temp_count;
+}
+
+static int gen_str(char *str, Type *t, State *global_state) {
+    int strsize = strlen(str) + 1;
+    int strnum = add_strinfo(str, strsize, global_state);
+
+    return gen_str_bitcast(t, strnum, strsize, global_state);
 }
 
 static int gen_float(float efloat, State *global_state) {
@@ -399,7 +367,7 @@ static void gen_zero(Type *type) {
 }
 
 static int copy_var_address(Type *type, int tempnum, bool is_global,
-        State *global_state) {
+        int indexnum, State *global_state) {
     gen_local_temporary_code(get_new_temporary(global_state));
     printf(" = getelementptr ");
     gen_type(type);
@@ -410,7 +378,14 @@ static int copy_var_address(Type *type, int tempnum, bool is_global,
         gen_global_temporary_code(tempnum);
     else
         gen_local_temporary_code(tempnum);
-    printf(", i32 0\n");
+
+    printf(", i32 ");
+    if (indexnum == 0)
+        printf("0");
+    else
+        gen_local_temporary_code(indexnum);
+
+    printf("\n");
 
     return global_state->temp_count;
 }
@@ -426,7 +401,7 @@ static int gen_var(RefVar *r, State *global_state) {
     Var *v = r->refv.v;
 
     return v->is_global ? copy_var_address(v->type, v->tempnum, v->is_global,
-            global_state) : v->tempnum;
+            0, global_state) : v->tempnum;
 }
 
 static int gen_array(RefVar *r, State *global_state) {
@@ -434,19 +409,7 @@ static int gen_array(RefVar *r, State *global_state) {
     int expindexnum = gen_exp(r->refa.idx, global_state);
     Type *indexedtype = get_ref_type(r);
 
-    gen_local_temporary_code(get_new_temporary(global_state));
-    printf(" = getelementptr ");
-    gen_type(indexedtype);
-    printf(", ");
-    gen_type(indexedtype);
-    printf("* ");
-    printf(" ");
-    gen_local_temporary_code(expvarnum);
-    printf(", i32 ");
-    gen_local_temporary_code(expindexnum);
-    printf("\n");
-
-    return global_state->temp_count;
+    return copy_var_address(indexedtype, expvarnum, false, expindexnum, global_state);
 }
 
 static int gen_ref(RefVar *r, State *global_state) {
@@ -872,6 +835,7 @@ static int gen_exp(Exp *exp, State *global_state) {
         case LEQ:
         case L:
         case G:
+        case NOT:
             lt = get_new_label(global_state);
             lf = get_new_label(global_state);
             lo = get_new_label(global_state);
@@ -889,7 +853,6 @@ static int gen_exp(Exp *exp, State *global_state) {
             gen_label_ref(lf);
             printf("]\n");
             return global_state->temp_count;
-        case NOT:
         case MINUS:
             return gen_unary_type(exp->unary.exp, exp->tag, global_state);
         case EXPATT:
@@ -945,9 +908,11 @@ static void gen_print(Exp *exp, State *global_state) {
                 gen_conditional_jump(lt, lf, global_state->temp_count);
                 gen_label(lt);
                 call_printf(6, "true");
+                printf(")\n");
                 gen_unconditional_jump(lo);
                 gen_label(lf);
                 call_printf(7, "false");
+                printf(")\n");
                 gen_unconditional_jump(lo);
                 gen_label(lo);
                 break;
@@ -1146,17 +1111,16 @@ static void init_strs(State *global_state) {
 
 void gen_code(State *global_state) {
     init_strs(global_state);
-    printf("@fmtint = internal constant [4 x i8] c\"%%d\\0A\\00\"\n");
-    printf("@fmtfloat = internal constant [6 x i8] c\"%%.7f\\0A\\00\"\n");
-    printf("@fmtbool = internal constant [6 x i8] c\"%%hhx\\0A\\00\"\n");
-    printf("@fmtchar = internal constant [4 x i8] c\"%%c\\0A\\00\"\n");
-    printf("@fmtptr = internal constant [4 x i8] c\"%%p\\0A\\00\"\n");
-    printf("@fmtstr = internal constant [4 x i8] c\"%%s\\0A\\00\"\n");
-    printf("@fmttrue = internal constant [6 x i8] c\"true\\0A\\00\"\n");
-    printf("@fmtfalse = internal constant [7 x i8] c\"false\\0A\\00\"\n");
+    printf("@.fmtint = internal constant [4 x i8] c\"%%d\\0A\\00\"\n");
+    printf("@.fmtfloat = internal constant [6 x i8] c\"%%.7f\\0A\\00\"\n");
+    printf("@.fmtbool = internal constant [6 x i8] c\"%%hhx\\0A\\00\"\n");
+    printf("@.fmtchar = internal constant [4 x i8] c\"%%c\\0A\\00\"\n");
+    printf("@.fmtptr = internal constant [4 x i8] c\"%%p\\0A\\00\"\n");
+    printf("@.fmtstr = internal constant [4 x i8] c\"%%s\\0A\\00\"\n");
+    printf("@.fmttrue = internal constant [6 x i8] c\"true\\0A\\00\"\n");
+    printf("@.fmtfalse = internal constant [7 x i8] c\"false\\0A\\00\"\n");
     printf("declare i32 @printf(i8*, ...)\n");
     printf("declare noalias i8* @malloc(i64)\n");
-    printf("declare void @llvm.memcpy.p0i8.p0i8.i64(i8* nocapture writeonly, i8* nocapture readonly, i64, i1)\n\n");
     gen_global_defs(GLOBAL_TREE, global_state);
     gen_strs(global_state);
 }
