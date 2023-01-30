@@ -1,8 +1,8 @@
-# Compiladores
-## Autores: Francisco Thiesen & Victor Nogueira
+# Compiler for simplified programming language [Monga](https://www.inf.puc-rio.br/%7Eroberto/comp/lang.html)
+## Authors: Francisco Thiesen & Victor Nogueira
 
-## Para compilar
+## Build command
 cd src && make
 
-## Para testar
+## Run tests
 cd test && bash test.sh
